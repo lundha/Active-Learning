@@ -29,3 +29,6 @@ def calculate_distance_matrix():
 
 if __name__ == "__main__":
     print("Hello")
+    print("Hello v2")
+
+    
