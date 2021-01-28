@@ -28,7 +28,7 @@ def calculate_distance_matrix():
 
 
 if __name__ == "__main__":
-    print("Hello")
+    print("Hello v1")
     print("Hello v2")
     print("Hello v3")
     print("Hello v4")
