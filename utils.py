@@ -4,7 +4,6 @@ from torchvision import transforms, utils
 
 def load_data_pool(data_dir, header_file, filename, file_ending, num_classes):
     
-
     composed = transforms.Compose([Convert2RGB(), Resize(224), Normalize(), ToTensor()])
         
     try:
@@ -15,3 +14,18 @@ def load_data_pool(data_dir, header_file, filename, file_ending, num_classes):
 
     return dataset
 
+def calculate_distance_matrix():
+    print('calculate distance matrix')
+    t_start = datetime.now()
+    dist_mat = np.matmul(embedding, embedding.transpose())
+    sq = np.array(dist_mat.diagonal()).reshape(len(self.X), 1)
+    dist_mat *= -2
+    dist_mat += sq
+    dist_mat += sq.transpose()
+    dist_mat = np.sqrt(dist_mat)
+    print(datetime.now() - t_start)
+
+
+
+if __name__ == "__main__":
+    print("Hello")
