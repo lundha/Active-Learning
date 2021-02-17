@@ -68,6 +68,8 @@ tic = datetime.now()
 X_tr, Y_tr, X_te, Y_te = get_dataset(DATA_SET)
 Y_tr, Y_te = torch.from_numpy(np.array(Y_tr)), torch.from_numpy(np.array(Y_te))
 
+n_pool = len(Y_tr)
+
 print(f"Number of training samples: {len(Y_tr)}")
 print(f"Number of testing samples: {len(Y_te)}")
 
@@ -93,7 +95,7 @@ while len(ALD.index['labeled']) < BUDGET + NUM_INIT_LABELED:
 
     rnd += 1
     print(f"Round: {rnd}")
-    queried_idxs = strategy.query(NUM_QUERY)
+    queried_idxs = strategy.query(NUM_QUERY, n_pool)
     ALD.move_from_unlabeled_to_labeled(queried_idxs)
 
     strategy.train()
