@@ -60,6 +60,8 @@ X_tr, Y_tr = load_data(data_args['data_dir'], train = True)
 X_te, Y_te = load_data(data_args['data_dir'], train = False)
 '''
 
+tic = datetime.now()
+
 X_tr, Y_tr, X_te, Y_te = get_dataset(DATA_SET)
 
 print(len(Y_tr))
@@ -76,8 +78,23 @@ strategy = Coreset(ALD, net, args)
 idxs = strategy.query(NUM_QUERY)
 print(len(idxs))
 
-if __name__ == "__main__":
-    pass
+printf(f"Computation time: {datetime.now()-toc}")
+
+round = 1
+
+while len(ALD.index['labeled'])+NUM_INIT_LABELED < BUDGET:
+
+    print(f"Round: {round}"
+    queried_idxs = strategy.query(NUM_QUERY)
+    ALD.move_from_unlabeled_to_labeled(queried_idxs)
+
+    strategy.train()
+    P = strategy.predict(X_te, Y_te)
+    acc[round] = 1.0 * (Y_te==P).sum().item() / len(Y_te)
+    print(f"Testing accuracy {acc[round]}")
+
+print(type(strategy).__name__)
+print(acc)
 
 
 

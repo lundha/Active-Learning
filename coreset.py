@@ -32,7 +32,7 @@ class Coreset(Strategy):
     # Optimize clusters
     def find_optimal_solution(self, min_distances):
         
-        opt = min_dist_mat.min(axis=1).max() 
+        opt = min_distances.min(axis=1).max() 
         bound_l = opt/2.0
         delta = opt
         xx, yy = np.where(dist_mat <= opt)

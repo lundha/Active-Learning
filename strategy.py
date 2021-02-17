@@ -1,8 +1,10 @@
 
 import torch
+from torch import nn
 from dataloader import Resize, Normalize, ToTensor, Convert2RGB, DataHandler
 from autoencoder import Autoencoder
 from torch.utils.data import DataLoader
+import torch.optim as optim
 import numpy as np
 from datetime import datetime
 
@@ -25,14 +27,38 @@ class Strategy():
 
 
     def _train(self, epoch, loader_tr, optimizer):
-        pass
+
+        for batch_idx, (x,y,idx) in enumerate(loader_tr):
+            x,y = x.to(self.device), y.to(self.device)
+            optimizer.zero_grad()
+            out = self.classifier(x)
+            loss = nn.CrossEntropyLoss()
+            loss = (out, y)
+            loss.backward()
+            optimizer.step()
+
 
     def train(self):
-        pass
+        n_epoch = self.args['n_epoch']
+        self.classifier = self.net().to(self.device)
+        optimizer = optim.Adam(self.net.parameters(), lr=0.001, weight_decay=0.0001)
+
+        idx_lb = self.ALD.index['labeled']
+        loader_tr = self.prepare_data(self.ALD.X[idx_lb], self.ALD.Y[idx_lb], self.args['transform'])
+
+        for epoch in range(1, n_epoch+1):
+            self._train(epoch, loader_tr, optimizer)
 
 
-    def predict(self, X, Y):
-        pass
+    def predict(self, Xte, Yte):
+        loader_te = self.prepare_data(Xte, Yte, self.args['transform'])
+        with torch.no_grad():
+            for x,y,idx in loader_te:
+                x,y = x.to(self.device), y.to(self.device)
+                out = self.classifier(x)
+                pred = out.max(1)[1]
+                P[idxs] = pred.cpu()
+        return P
 
 
     def prepare_data(self, X_unlabeled, Y_unlabeled, transform):

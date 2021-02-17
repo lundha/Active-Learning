@@ -1,5 +1,4 @@
 
-
 from torchvision.models import resnet18, resnet34
 
 def get_net(name):
