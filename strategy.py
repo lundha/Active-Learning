@@ -57,7 +57,7 @@ class Strategy():
             for x, y, idxs in dataloader:
                 out, e1 = encoder(x)
                 embedding[idxs] = e1.cpu()
-        np.save('/Users/martin.lund.haug/Documents/Masteroppgave/datasets/cifar10/embedding.npy', embedding)
+        np.save('./CIFAR10/embedding.npy', embedding)
         embedding = embedding.numpy()
         return embedding
 
@@ -73,6 +73,6 @@ class Strategy():
         dist_mat += sq
         dist_mat += sq.transpose()
         dist_mat = np.sqrt(dist_mat)
-        np.save('/Users/martin.lund.haug/Documents/Masteroppgave/datasets/cifar10/distance_matrix.npy', dist_mat)
-        print(f"Time to generate distance matrix: {datetime.now() - t_start}")
+        np.save('./CIFAR10/distance_matrix.npy', dist_mat)
+        print(f"Time taken to generate distance matrix: {datetime.now() - t_start}")
         return dist_mat
