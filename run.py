@@ -30,6 +30,8 @@ NUM_INIT_LABELED = 10000
 NUM_QUERY = 1000
 BUDGET = 1000
 
+'''
+
 load_data_args = {'CIFAR10':
             {'data_dir': "/Users/martin.lund.haug/Documents/Masteroppgave/datasets/cifar10/",
             'num_classes': 10,
@@ -48,13 +50,16 @@ args_dict = {'CIFAR10':
 args = args_dict[DATA_SET]
 data_args = load_data_args[DATA_SET]
 
-'''
+
 train_data = load_data_pool(train=True, arg=data_args)
 test_data = load_data_pool(train=False, arg=data_args)
-'''
+
 
 X_tr, Y_tr = load_data(data_args['data_dir'], train = True)
 X_te, Y_te = load_data(data_args['data_dir'], train = False)
+'''
+
+X_tr, Y_tr, X_te, Y_te = get_dataset(DATA_SET)
 
 print(len(Y_tr))
 print(len(Y_te))
