@@ -1,8 +1,9 @@
 
 from dataloader import Resize, Normalize, ToTensor, Convert2RGB, DataHandler
 import click
+import torch
 from autoencoder import Autoencoder
-from utils import load_data_pool, print_image
+from utils import load_data_pool, print_image, sub_sample_dataset
 from torch.utils.data import DataLoader
 from torchvision import transforms, utils
 import matplotlib.pyplot as plt
@@ -27,8 +28,9 @@ num_classes = 10
 
 DATA_SET = 'CIFAR10'
 NET = 'resnet18'
-NUM_INIT_LABELED = 10000
-NUM_QUERY = 1000
+NUM_INIT_LABELED = 10
+SAMPLE_SIZE = 1000
+NUM_QUERY = 100
 BUDGET = 1000
 
 
@@ -63,13 +65,14 @@ X_te, Y_te = load_data(data_args['data_dir'], train = False)
 tic = datetime.now()
 
 X_tr, Y_tr, X_te, Y_te = get_dataset(DATA_SET)
+Y_tr, Y_te = torch.from_numpy(np.array(Y_tr)), torch.from_numpy(np.array(Y_te))
 
 print(len(Y_tr))
 print(len(Y_te))
 
 # Generate initially labeled pool 
 ALD = ActiveLearningDataset(X_tr, Y_tr, NUM_INIT_LABELED)
-
+print(ALD.index['labeled'])
 # Load network 
 net = get_net(NET)
 
@@ -84,7 +87,7 @@ round = 1
 
 while len(ALD.index['labeled'])+NUM_INIT_LABELED < BUDGET:
 
-    print(f"Round: {round}"
+    print(f"Round: {round}")
     queried_idxs = strategy.query(NUM_QUERY)
     ALD.move_from_unlabeled_to_labeled(queried_idxs)
 

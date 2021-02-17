@@ -69,7 +69,13 @@ def print_image(dataset, idx):
     plt.title(label_name)
     plt.show()
 
+def sub_sample_dataset(x, y, new_size):
 
+    sample = np.random.randint(0,len(y),new_size)
+    new_x = [x[i] for i in sample]
+    new_y = [y[i] for i in sample]
+
+    return np.array(new_x), np.array(new_y)
 
 def get_embedding(dataloader) -> np.array:
     '''
