@@ -48,8 +48,6 @@ class ActiveLearningDataset:
         if not isinstance(idx, list):
             idx = list(idx)
 
-        print(f"Global index: {idx}")
-
         self.index['unlabeled'] = np.delete(self.index['unlabeled'], idxs_unlabeled, axis=0)
         self.index['labeled'] = np.append(self.index['labeled'], idx, axis=0)
         return self.X[idx], self.Y[idx]  

@@ -74,14 +74,16 @@ def solve_fac_loc(xx, yy, subset, n, budget):
     model.__data = x,y,z
     return model
 
-def gurobi_solver():
+def gurobi_solver(xx, yy, dd, subset, max_dist, budget, n):
 
+    '''
     r_name = 'mip123.pkl'
     w_name = 'sols.pkl'
     print ('load pickle {}'.format(r_name))
     xx, yy, dd, subset, max_dist, budget, n = pickle.load(open(r_name, 'rb'))
+    '''
     print (len(subset), budget, n)
-
+    
 
     t_start = datetime.now()
 
@@ -135,5 +137,8 @@ def gurobi_solver():
 
     if sols is not None:
         sols = [int(v.split('_')[-1]) for v in sols]
+    '''
     print ('save pickle {}'.format(w_name))
     pickle.dump(sols, open(w_name, 'wb'), 2)
+    '''
+    return sols

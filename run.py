@@ -68,8 +68,8 @@ tic = datetime.now()
 X_tr, Y_tr, X_te, Y_te = get_dataset(DATA_SET)
 Y_tr, Y_te = torch.from_numpy(np.array(Y_tr)), torch.from_numpy(np.array(Y_te))
 
-print(len(Y_tr))
-print(len(Y_te))
+print(f"Number of training samples: {len(Y_tr)}")
+print(f"Number of testing samples: {len(Y_te)}")
 
 # Generate initially labeled pool 
 ALD = ActiveLearningDataset(X_tr, Y_tr, NUM_INIT_LABELED)
@@ -80,12 +80,12 @@ strategy = Coreset(ALD, net, args)
 
 # Round 0 accuracy
 rnd = 0
+print(f"Round: {rnd}")
 strategy.train()
 P = strategy.predict(X_te, Y_te)
 acc = np.zeros(10)
 acc[rnd] = 1.0 * (Y_te==P).sum().item() / len(Y_te)
 print(f"Testing accuracy {acc[rnd]}")
-
 print(f"Computation time: {datetime.now()-tic}")
 
 
@@ -101,8 +101,8 @@ while len(ALD.index['labeled']) < BUDGET + NUM_INIT_LABELED:
     acc[rnd] = 1.0 * (Y_te==P).sum().item() / len(Y_te)
     print(f"Testing accuracy {acc[rnd]}")
     
-print(type(strategy).__name__)
 print(acc)
+print(type(strategy).__name__)
 
 
 
