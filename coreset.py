@@ -19,7 +19,7 @@ class Coreset(Strategy):
         embedding = self.get_embedding(loader, self.embedding_dim)
         dist_mat = self.calculate_distance_matrix(embedding)
         greedy_idx, min_dist = self.find_greedy_solution(dist_mat, num_query)
-        opt_idx = self.find_optimal_solution(min_dist)
+        opt_idx = self.find_optimal_solution(dist_mat, min_dist)
 
         return opt_idx
 
@@ -30,7 +30,7 @@ class Coreset(Strategy):
         return idx, kcg.min_distances
 
     # Optimize clusters
-    def find_optimal_solution(self, min_distances):
+    def find_optimal_solution(self, dist_mat, min_distances):
         
         opt = min_distances.min(axis=1).max() 
         bound_l = opt/2.0
