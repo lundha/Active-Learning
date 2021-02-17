@@ -1,0 +1,30 @@
+name: core-set-env
+channels:
+  - anaconda
+  - conda-forge
+  - pytorch
+  - http://conda.anaconda.org/gurobi
+  - defaults
+dependencies:
+  - scikit-learn
+  - scikit-image
+  - scipy
+  - pytorch
+  - torchvision
+  - imageio
+  - opencv
+  - pdbpp
+  - cloudpickle
+  - gurobi
+  - pandas 
+  - numpy
+  - matplotlib
+  - time
+  - pillow
+  - pip
+  - click
+  - pip:
+    - flake8==3.7.9
+    - pycodestyle==2.5.0
+    - pyflakes==2.1.1
+    - opencv.contrib-python
