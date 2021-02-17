@@ -31,7 +31,7 @@ NUM_INIT_LABELED = 10000
 NUM_QUERY = 1000
 BUDGET = 1000
 
-'''
+
 
 load_data_args = {'CIFAR10':
             {'data_dir': "/Users/martin.lund.haug/Documents/Masteroppgave/datasets/cifar10/",
@@ -43,14 +43,14 @@ load_data_args = {'CIFAR10':
 args_dict = {'CIFAR10': 
         {'n_epoch': 10, 
         'transform': transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]), 
-        'loader_tr_args': {'batch_size': 32, 'num_workers': 1},
+        'loader_tr_args': {'batch_size': 64, 'num_workers': 1},
         'loader_te_args': {'batch_size': 1000, 'num_workers': 1},
         }
     }
 
 args = args_dict[DATA_SET]
 data_args = load_data_args[DATA_SET]
-
+'''
 
 train_data = load_data_pool(train=True, arg=data_args)
 test_data = load_data_pool(train=False, arg=data_args)

@@ -5,7 +5,7 @@ from torch.utils.data import Dataset
 from PIL import Image
 
 def get_dataset(name):
-    if name == 'cifar10':
+    if name == 'CIFAR10':
         return get_CIFAR10()
 
 
