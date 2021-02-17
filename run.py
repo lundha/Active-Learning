@@ -25,7 +25,7 @@ header_file = data_dir + "header.tfl.txt"
 filename = data_dir + "image_set.data"
 file_ending = ".png"
 num_classes = 10
-
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 DATA_SET = 'CIFAR10'
 NET = 'resnet18'
 NUM_INIT_LABELED = 1000
@@ -37,7 +37,9 @@ NUM_WORKERS = 4
 load_data_args = {'CIFAR10':
             {'data_dir': "/Users/martin.lund.haug/Documents/Masteroppgave/datasets/cifar10/",
             'num_classes': 10,
-            'file_ending': ".png"
+            'file_ending': ".png",
+            'num_channels': 3,
+            'device': device
             }
         }
 
@@ -71,9 +73,8 @@ print(len(Y_te))
 
 # Generate initially labeled pool 
 ALD = ActiveLearningDataset(X_tr, Y_tr, NUM_INIT_LABELED)
-print(ALD.index['labeled'])
 # Load network 
-net = get_net(NET)
+net = get_net(NET, data_args)
 
 # Load strategy
 strategy = Coreset(ALD, net, args)
