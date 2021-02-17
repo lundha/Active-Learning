@@ -28,11 +28,10 @@ num_classes = 10
 
 DATA_SET = 'CIFAR10'
 NET = 'resnet18'
-NUM_INIT_LABELED = 10
-SAMPLE_SIZE = 1000
-NUM_QUERY = 100
+NUM_INIT_LABELED = 1000
+NUM_QUERY = 200
 BUDGET = 1000
-
+NUM_WORKERS = 4
 
 
 load_data_args = {'CIFAR10':
@@ -45,8 +44,8 @@ load_data_args = {'CIFAR10':
 args_dict = {'CIFAR10': 
         {'n_epoch': 10, 
         'transform': transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]), 
-        'loader_tr_args': {'batch_size': 64, 'num_workers': 1},
-        'loader_te_args': {'batch_size': 1000, 'num_workers': 1},
+        'loader_tr_args': {'batch_size': 64, 'num_workers': 4},
+        'loader_te_args': {'batch_size': 1000, 'num_workers': 4},
         }
     }
 
@@ -78,8 +77,12 @@ net = get_net(NET)
 
 # Load strategy
 strategy = Coreset(ALD, net, args)
-idxs = strategy.query(NUM_QUERY)
-print(len(idxs))
+
+# Round 0 accuracy
+strategy.train()
+P = strategy.predict(X_te, Y_te)
+acc[round] = 1.0 * (Y_te==P).sum().item() / len(Y_te)
+print(f"Testing accuracy {acc[round]}")
 
 printf(f"Computation time: {datetime.now()-toc}")
 

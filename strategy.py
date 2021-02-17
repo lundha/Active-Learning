@@ -44,14 +44,15 @@ class Strategy():
         optimizer = optim.Adam(self.net.parameters(), lr=0.001, weight_decay=0.0001)
 
         idx_lb = self.ALD.index['labeled']
-        loader_tr = self.prepare_data(self.ALD.X[idx_lb], self.ALD.Y[idx_lb], self.args['transform'])
+        loader_tr = self.prepare_data(self.ALD.X[idx_lb], self.ALD.Y[idx_lb], self.args['transform'], args['loader_tr_args'])
 
         for epoch in range(1, n_epoch+1):
             self._train(epoch, loader_tr, optimizer)
 
 
     def predict(self, Xte, Yte):
-        loader_te = self.prepare_data(Xte, Yte, self.args['transform'])
+        loader_te = self.prepare_data(Xte, Yte, args['transform'], args['loader_te_args'])
+        
         with torch.no_grad():
             for x,y,idx in loader_te:
                 x,y = x.to(self.device), y.to(self.device)
@@ -61,13 +62,13 @@ class Strategy():
         return P
 
 
-    def prepare_data(self, X_unlabeled, Y_unlabeled, transform):
+    def prepare_data(self, X_unlabeled, Y_unlabeled, transform, args):
         '''
         Creates a dataloader from unlabeled X and Y data points
         :param: X_unlabeled: Unlabeled datapoints Y_unlabeled: Unlabeled labels
         '''
-        handler = DataHandler(X_unlabeled, Y_unlabeled, transform)
-        loader = DataLoader(handler, shuffle=False, batch_size=32)
+        handler = DataHandler(X_unlabeled, Y_unlabeled, transform=)
+        loader = DataLoader(handler, shuffle=False, batch_size=args['batch_size'], num_workers=args['num_workers'])
         return loader
 
     def get_embedding(self, dataloader, embedding_dim):
