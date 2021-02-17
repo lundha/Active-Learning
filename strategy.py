@@ -67,7 +67,7 @@ class Strategy():
         Creates a dataloader from unlabeled X and Y data points
         :param: X_unlabeled: Unlabeled datapoints Y_unlabeled: Unlabeled labels
         '''
-        handler = DataHandler(X_unlabeled, Y_unlabeled, transform=)
+        handler = DataHandler(X_unlabeled, Y_unlabeled, transform)
         loader = DataLoader(handler, shuffle=False, batch_size=args['batch_size'], num_workers=args['num_workers'])
         return loader
 
