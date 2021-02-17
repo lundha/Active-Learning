@@ -15,6 +15,7 @@ from utils import load_data
 import os 
 from activelearningdataset import ActiveLearningDataset
 from get_net import get_net
+from download_dataset import get_dataset
 
 
 # Load data
