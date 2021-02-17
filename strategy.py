@@ -12,12 +12,12 @@ class Strategy():
 
     def __init__(self, ALD, net, args):
         self.ALD = ALD
-        self.net = net
+        self.net = net.model
         self.args = args
         self.n_pool = len(ALD.index['unlabeled'])
         use_cuda = torch.cuda.is_available()
         self.device = torch.device("cuda" if use_cuda else "cpu")
-
+        self.classifier = self.net.to(self.device)
 
     def query(self, n_query):
         pass
@@ -33,32 +33,33 @@ class Strategy():
             optimizer.zero_grad()
             out = self.classifier(x)
             loss = nn.CrossEntropyLoss()
-            loss = (out, y)
-            loss.backward()
+            output = loss(out, y)
+            output.backward()
             optimizer.step()
 
 
     def train(self):
         n_epoch = self.args['n_epoch']
-        self.classifier = self.net().to(self.device)
+        self.classifier.train()
         optimizer = optim.Adam(self.net.parameters(), lr=0.001, weight_decay=0.0001)
 
         idx_lb = self.ALD.index['labeled']
-        loader_tr = self.prepare_data(self.ALD.X[idx_lb], self.ALD.Y[idx_lb], self.args['transform'], args['loader_tr_args'])
+        loader_tr = self.prepare_data(self.ALD.X[idx_lb], self.ALD.Y[idx_lb], self.args['transform'], self.args['loader_tr_args'])
 
         for epoch in range(1, n_epoch+1):
             self._train(epoch, loader_tr, optimizer)
 
 
     def predict(self, Xte, Yte):
-        loader_te = self.prepare_data(Xte, Yte, args['transform'], args['loader_te_args'])
-        
+        loader_te = self.prepare_data(Xte, Yte, self.args['transform'], self.args['loader_te_args'])
+        self.classifier.eval()
+        P = torch.zeros(len(Yte), dtype=Yte.dtype)
         with torch.no_grad():
             for x,y,idx in loader_te:
                 x,y = x.to(self.device), y.to(self.device)
                 out = self.classifier(x)
                 pred = out.max(1)[1]
-                P[idxs] = pred.cpu()
+                P[idx] = pred.cpu()
         return P
 
 

@@ -75,31 +75,32 @@ print(len(Y_te))
 ALD = ActiveLearningDataset(X_tr, Y_tr, NUM_INIT_LABELED)
 # Load network 
 net = get_net(NET, data_args)
-
 # Load strategy
 strategy = Coreset(ALD, net, args)
 
 # Round 0 accuracy
+rnd = 0
 strategy.train()
 P = strategy.predict(X_te, Y_te)
-acc[round] = 1.0 * (Y_te==P).sum().item() / len(Y_te)
-print(f"Testing accuracy {acc[round]}")
+acc = np.zeros(10)
+acc[rnd] = 1.0 * (Y_te==P).sum().item() / len(Y_te)
+print(f"Testing accuracy {acc[rnd]}")
 
-printf(f"Computation time: {datetime.now()-toc}")
+print(f"Computation time: {datetime.now()-tic}")
 
-round = 1
 
-while len(ALD.index['labeled'])+NUM_INIT_LABELED < BUDGET:
+while len(ALD.index['labeled']) < BUDGET + NUM_INIT_LABELED:
 
-    print(f"Round: {round}")
+    rnd += 1
+    print(f"Round: {rnd}")
     queried_idxs = strategy.query(NUM_QUERY)
     ALD.move_from_unlabeled_to_labeled(queried_idxs)
 
     strategy.train()
     P = strategy.predict(X_te, Y_te)
-    acc[round] = 1.0 * (Y_te==P).sum().item() / len(Y_te)
-    print(f"Testing accuracy {acc[round]}")
-
+    acc[rnd] = 1.0 * (Y_te==P).sum().item() / len(Y_te)
+    print(f"Testing accuracy {acc[rnd]}")
+    
 print(type(strategy).__name__)
 print(acc)
 

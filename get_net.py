@@ -5,12 +5,12 @@ import torch
 def get_net(name, args):
 
     if name=='resnet18':
-        return ResNet18(n_classes=args['num_classes'], n_channels=args['num_channels'], device=args['device'])
+        net = ResNet18(n_classes=args['num_classes'], n_channels=args['num_channels'], device=args['device'])
     elif name=='resnet34':
-        return ResNet18(n_classes=args['num_classes'], n_channels=args['num_channels'], device=args['device'])
+        net = ResNet18(n_classes=args['num_classes'], n_channels=args['num_channels'], device=args['device'])
     else:
         return "Invalid name"
-
+    return net
 
 class ResNet18:
 
@@ -25,7 +25,7 @@ class ResNet18:
     def __change_last_layer(self) -> None:
         self.model.fc = torch.nn.Linear(512, self.n_classes)
 
-    def get_embedding_dim() -> int:
+    def get_embedding_dim(self) -> int:
         return 512
 
 
