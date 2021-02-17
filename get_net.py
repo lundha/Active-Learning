@@ -5,9 +5,9 @@ import torch
 def get_net(name, args):
 
     if name=='resnet18':
-        return ResNet18(n_classes=args['num_classes'], n_channels=args['nun_channels'], device=args['device'])
+        return ResNet18(n_classes=args['num_classes'], n_channels=args['num_channels'], device=args['device'])
     elif name=='resnet34':
-        return ResNet18(n_classes=args['num_classes'], n_channels=args['nun_channels'], device=args['device'])
+        return ResNet18(n_classes=args['num_classes'], n_channels=args['num_channels'], device=args['device'])
     else:
         return "Invalid name"
 
