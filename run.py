@@ -29,7 +29,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 DATA_SET = 'CIFAR10'
 NET = 'CIFAR_NET'
 NUM_INIT_LABELED = 0
-NUM_QUERY = 100
+NUM_QUERY = 50
 BUDGET = 500
 NUM_WORKERS = 4
 
