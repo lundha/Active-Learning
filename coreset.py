@@ -39,7 +39,7 @@ class Coreset(Strategy):
         xx, yy = np.where(dist_mat <= opt)
         dd = dist_mat[xx, yy]
         subset = [i for i in range(0)]
-        Print(f"Arguments: {xx.tolist()}, { yy.tolist()}, {dd.tolist()}, {subset}, {float(opt)}, {num_query}, {n_pool}")
+        print(f"Arguments: {xx.tolist()}, { yy.tolist()}, {dd.tolist()}, {subset}, {float(opt)}, {num_query}, {n_pool}")
         #pickle.dump((xx.tolist(), yy.tolist(), dd.tolist(), subset, float(opt), NUM_QUERY, n_pool), open('mip{}.pkl'.format(SEED), 'wb'), 2)
         sols = gurobi_solver(xx.tolist(), yy.tolist(), dd.tolist(), subset, float(opt), num_query, n_pool)
         #sols = pickle.load(open('sols{}.pkl'.format(SEED), 'rb'))
