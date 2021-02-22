@@ -62,7 +62,7 @@ def solve_fac_loc(xx, yy, subset, n, budget):
 
     for _x in yyy:
         coef = []
-        var = [
+        var = []
         for _y in yyy[_x]:
             #if not _x==_y:
             coef.append(1)
@@ -95,7 +95,7 @@ def gurobi_solver(xx, yy, dd, subset, max_dist, budget, n):
     model = solve_fac_loc(xx, yy, subset, n, budget)
 
     print(dd)
-    print(f"len dd: len(dd)")
+    print(f"len dd: {dd}")
     #model.setParam( 'OutputFlag', False )
     x,y,z = model.__data
     tor = 1e-7
