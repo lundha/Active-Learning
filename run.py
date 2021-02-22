@@ -88,7 +88,7 @@ acc = np.zeros(10)
 acc[rnd] = 1.0 * (Y_te==P).sum().item() / len(Y_te)
 print(f"Testing accuracy {acc[rnd]}")
 print(f"Computation time: {datetime.now()-tic}")
-'''
+
 
 
 while len(ALD.index['labeled']) < BUDGET + NUM_INIT_LABELED:
@@ -108,5 +108,5 @@ print(acc)
 print(type(strategy).__name__)
 
 
-'''
+
 
