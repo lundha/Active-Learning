@@ -66,5 +66,5 @@ class CIFAR_NET(nn.Module):
         return x, e1
 
     def get_embedding_dim(self):
-        return 10
+        return 50
 

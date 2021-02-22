@@ -28,7 +28,7 @@ num_classes = 10
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 DATA_SET = 'CIFAR10'
 NET = 'CIFAR_NET'
-NUM_INIT_LABELED = 100
+NUM_INIT_LABELED = 0
 NUM_QUERY = 200
 BUDGET = 1000
 NUM_WORKERS = 4
@@ -64,7 +64,7 @@ X_te, Y_te = load_data(data_args['data_dir'], train = False)
 
 tic = datetime.now()
 
-X_tr, Y_tr, X_te, Y_te = get_dataset(DATA_SET, Fraction=0.1)
+X_tr, Y_tr, X_te, Y_te = get_dataset(DATA_SET, Fraction=0.01)
 
 
 print(f"Number of training samples: {len(Y_tr)}")
