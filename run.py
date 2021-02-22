@@ -97,6 +97,7 @@ while len(ALD.index['labeled']) < BUDGET + NUM_INIT_LABELED:
 
     rnd += 1
     print(f"Round: {rnd}")
+    print(ALD)
     queried_idxs = strategy.query(NUM_QUERY, n_pool)
     ALD.move_from_unlabeled_to_labeled(queried_idxs)
 
