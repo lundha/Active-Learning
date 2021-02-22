@@ -35,6 +35,7 @@ def solve_fac_loc(xx, yy, subset, n, budget):
 
     print ('gen sum q', datetime.now()-t_start)
     coef = [1 for j in range(n)]
+    print(f"len y: {len(y)}, n: {n}")
     var = [y[j] for j in range(n)]
     model.addConstr(LinExpr(coef,var), "=", rhs=budget+len(subset), name="k_center")
 
