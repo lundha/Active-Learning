@@ -45,7 +45,3 @@ class Coreset(Strategy):
         sols = gurobi_solver(xx.tolist(), yy.tolist(), dd.tolist(), subset, float(opt), num_query, n_pool)
         #sols = pickle.load(open('sols{}.pkl'.format(SEED), 'rb'))
         return sols
-
- 
-
-    

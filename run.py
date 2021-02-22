@@ -97,9 +97,12 @@ while len(ALD.index['labeled']) < BUDGET + NUM_INIT_LABELED:
     n_pool = len(ALD.index['unlabeled'])
     print(f"pool size: {n_pool}")
 
-    queried_idxs = strategy.query(NUM_QUERY, n_pool)
-    print(f"len queried indexes: {len(queried_idxs)}")
-    ALD.move_from_unlabeled_to_labeled(queried_idxs)
+    try:
+        queried_idxs = strategy.query(NUM_QUERY, n_pool)
+        print(f"len queried indexes: {len(queried_idxs)}")
+        ALD.move_from_unlabeled_to_labeled(queried_idxs)
+    except TypeError:
+        continue
 
     strategy.train()
     P = strategy.predict(X_te, Y_te)
