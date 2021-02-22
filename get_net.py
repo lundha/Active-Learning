@@ -44,7 +44,7 @@ class ResNet34:
         self.model.fc = nn.Linear(512, self.n_classes)
 
     def get_embedding_dim(self) -> int:
-        return 512
+        return 50
 
 class CIFAR_NET(nn.Module):
     def __init__(self):
