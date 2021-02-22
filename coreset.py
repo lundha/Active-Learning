@@ -3,6 +3,7 @@ import numpy as np
 from gurobi_solver import gurobi_solver
 from strategy import Strategy
 import pickle
+import torch
 
 class Coreset(Strategy):
     def __init__(self, ALD, net, args, tor=1e-4):
@@ -39,11 +40,6 @@ class Coreset(Strategy):
         xx, yy = np.where(dist_mat <= opt)
         dd = dist_mat[xx, yy]
         subset = [i for i in range(0)]
-        if self.device.type == 'cuda':
-            print("Running on GPU")
-        else:
-            print("Running on CPU")
-            
         print(f"Arguments: {subset}, {float(opt)}, {num_query}, {n_pool}")
         #pickle.dump((xx.tolist(), yy.tolist(), dd.tolist(), subset, float(opt), NUM_QUERY, n_pool), open('mip{}.pkl'.format(SEED), 'wb'), 2)
         sols = gurobi_solver(xx.tolist(), yy.tolist(), dd.tolist(), subset, float(opt), num_query, n_pool)

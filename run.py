@@ -28,7 +28,7 @@ num_classes = 10
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 DATA_SET = 'CIFAR10'
 NET = 'CIFAR_NET'
-NUM_INIT_LABELED = 1000
+NUM_INIT_LABELED = 100
 NUM_QUERY = 200
 BUDGET = 1000
 NUM_WORKERS = 4
@@ -46,8 +46,8 @@ load_data_args = {'CIFAR10':
 args_dict = {'CIFAR10': 
         {'n_epoch': 10, 
         'transform': transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]), 
-        'loader_tr_args': {'batch_size': 64, 'num_workers': 1},
-        'loader_te_args': {'batch_size': 1000, 'num_workers': 1},
+        'loader_tr_args': {'batch_size': 64, 'num_workers': NUM_WORKERS},
+        'loader_te_args': {'batch_size': 1000, 'num_workers': NUM_WORKERS},
         }
     }
 
@@ -58,21 +58,17 @@ data_args = load_data_args[DATA_SET]
 train_data = load_data_pool(train=True, arg=data_args)
 test_data = load_data_pool(train=False, arg=data_args)
 
-
 X_tr, Y_tr = load_data(data_args['data_dir'], train = True)
 X_te, Y_te = load_data(data_args['data_dir'], train = False)
 '''
 
 tic = datetime.now()
 
-X_tr, Y_tr, X_te, Y_te = get_dataset(DATA_SET)
-Y_tr, Y_te = torch.from_numpy(np.array(Y_tr)), torch.from_numpy(np.array(Y_te))
-
-X_tr, Y_tr = X_te, Y_te
+X_tr, Y_tr, X_te, Y_te = get_dataset(DATA_SET, Fraction=0.1)
 
 
 print(f"Number of training samples: {len(Y_tr)}")
-#print(f"Number of testing samples: {len(Y_te)}")
+print(f"Number of testing samples: {len(Y_te)}")
 
 # Generate initially labeled pool 
 ALD = ActiveLearningDataset(X_tr, Y_tr, NUM_INIT_LABELED)
@@ -92,6 +88,7 @@ acc = np.zeros(10)
 acc[rnd] = 1.0 * (Y_te==P).sum().item() / len(Y_te)
 print(f"Testing accuracy {acc[rnd]}")
 print(f"Computation time: {datetime.now()-tic}")
+'''
 
 
 while len(ALD.index['labeled']) < BUDGET + NUM_INIT_LABELED:
@@ -111,5 +108,5 @@ print(acc)
 print(type(strategy).__name__)
 
 
-
+'''
 
