@@ -77,7 +77,7 @@ class Strategy():
         Create and save embedding 
         :param: dataloader:dataloader, embedding_din:embedding dimension 
         '''
-        encoder = Autoencoder()
+        encoder = Autoencoder(embedding_dim)
 
         embedding = torch.zeros([len(dataloader.dataset), embedding_dim])
         
