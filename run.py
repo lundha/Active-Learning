@@ -29,8 +29,8 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 DATA_SET = 'CIFAR10'
 NET = 'CIFAR_NET'
 NUM_INIT_LABELED = 0
-NUM_QUERY = 200
-BUDGET = 1000
+NUM_QUERY = 100
+BUDGET = 500
 NUM_WORKERS = 4
 
 
@@ -72,8 +72,6 @@ print(f"Number of testing samples: {len(Y_te)}")
 
 # Generate initially labeled pool 
 ALD = ActiveLearningDataset(X_tr, Y_tr, NUM_INIT_LABELED)
-n_pool = len(ALD.index['unlabeled'])
-print(f"pool size: {n_pool}")
 # Load network 
 net = get_net(NET, data_args)
 # Load strategy
@@ -96,6 +94,9 @@ while len(ALD.index['labeled']) < BUDGET + NUM_INIT_LABELED:
     rnd += 1
     print(f"Round: {rnd}")
     print(ALD)
+    n_pool = len(ALD.index['unlabeled'])
+    print(f"pool size: {n_pool}")
+
     queried_idxs = strategy.query(NUM_QUERY, n_pool)
     ALD.move_from_unlabeled_to_labeled(queried_idxs)
 
