@@ -102,7 +102,7 @@ while len(ALD.index['labeled']) < BUDGET + NUM_INIT_LABELED:
         print(f"len queried indexes: {len(queried_idxs)}")
         ALD.move_from_unlabeled_to_labeled(queried_idxs)
     except TypeError:
-        continue
+        break
 
     strategy.train()
     P = strategy.predict(X_te, Y_te)
