@@ -70,13 +70,14 @@ Y_tr, Y_te = torch.from_numpy(np.array(Y_tr)), torch.from_numpy(np.array(Y_te))
 
 X_tr, Y_tr = X_te, Y_te
 
-n_pool = len(Y_tr)
 
 print(f"Number of training samples: {len(Y_tr)}")
-print(f"Number of testing samples: {len(Y_te)}")
+#print(f"Number of testing samples: {len(Y_te)}")
 
 # Generate initially labeled pool 
 ALD = ActiveLearningDataset(X_tr, Y_tr, NUM_INIT_LABELED)
+n_pool = len(ALD.index['unlabeled'])
+print(f"pool size: {n_pool}")
 # Load network 
 net = get_net(NET, data_args)
 # Load strategy
