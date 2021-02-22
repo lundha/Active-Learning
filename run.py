@@ -32,7 +32,7 @@ NUM_INIT_LABELED = 0
 NUM_QUERY = 50
 BUDGET = 500
 NUM_WORKERS = 4
-
+FRACTION = 0.1
 
 load_data_args = {'CIFAR10':
             {'data_dir': "/Users/martin.lund.haug/Documents/Masteroppgave/datasets/cifar10/",
@@ -64,7 +64,7 @@ X_te, Y_te = load_data(data_args['data_dir'], train = False)
 
 tic = datetime.now()
 
-X_tr, Y_tr, X_te, Y_te = get_dataset(DATA_SET, Fraction=0.01)
+X_tr, Y_tr, X_te, Y_te = get_dataset(DATA_SET, Fraction=FRACTION)
 
 
 print(f"Number of training samples: {len(Y_tr)}")
