@@ -46,8 +46,8 @@ load_data_args = {'CIFAR10':
 args_dict = {'CIFAR10': 
         {'n_epoch': 10, 
         'transform': transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]), 
-        'loader_tr_args': {'batch_size': 64, 'num_workers': 4},
-        'loader_te_args': {'batch_size': 1000, 'num_workers': 4},
+        'loader_tr_args': {'batch_size': 64, 'num_workers': 1},
+        'loader_te_args': {'batch_size': 1000, 'num_workers': 1},
         }
     }
 
@@ -67,6 +67,8 @@ tic = datetime.now()
 
 X_tr, Y_tr, X_te, Y_te = get_dataset(DATA_SET)
 Y_tr, Y_te = torch.from_numpy(np.array(Y_tr)), torch.from_numpy(np.array(Y_te))
+
+X_tr, Y_tr = X_te, Y_te
 
 n_pool = len(Y_tr)
 
