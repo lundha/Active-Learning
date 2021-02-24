@@ -28,11 +28,13 @@ num_classes = 10
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 DATA_SET = 'CIFAR10'
 NET = 'resnet18'
+
+# Create config file for these numbers
 NUM_INIT_LABELED = 0
-NUM_QUERY = 50
-BUDGET = 500
+NUM_QUERY = 1000
+BUDGET = 30000
 NUM_WORKERS = 4
-FRACTION = 0.1
+FRACTION = 1
 
 load_data_args = {'CIFAR10':
             {'data_dir': "/Users/martin.lund.haug/Documents/Masteroppgave/datasets/cifar10/",
