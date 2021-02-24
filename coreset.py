@@ -21,8 +21,9 @@ class Coreset(Strategy):
         embedding = self.get_embedding(loader, self.embedding_dim)
         dist_mat = self.calculate_distance_matrix(embedding)
         greedy_idx, min_dist = self.find_greedy_solution(dist_mat, num_query)
-        opt_idx = self.find_optimal_solution(dist_mat, min_dist, num_query, n_pool)
-
+        #opt_idx = self.find_optimal_solution(dist_mat, min_dist, num_query, n_pool)
+        opt_idx = greedy_idx   
+        
         return opt_idx
 
     # Find greedy solution
