@@ -17,7 +17,7 @@ class Coreset(Strategy):
     def query(self, num_query, n_pool):
 
         idx_ulb = self.ALD.index['unlabeled']
-        loader = self.prepare_data(self.ALD.X[idx_ulb], self.ALD.Y[idx_ulb], self.args['transform'], self.args['loader_tr_args'])
+        loader = self.prepare_loader(self.ALD.X[idx_ulb], self.ALD.Y[idx_ulb], self.args['transform'], self.args['loader_tr_args'])
         embedding = self.get_embedding(loader, self.embedding_dim)
         dist_mat = self.calculate_distance_matrix(embedding)
         greedy_idx, min_dist = self.find_greedy_solution(dist_mat, num_query)

@@ -44,14 +44,14 @@ class Strategy():
         optimizer = optim.Adam(self.net.parameters(), lr=0.001, weight_decay=0.0001)
 
         idx_lb = self.ALD.index['labeled']
-        loader_tr = self.prepare_data(self.ALD.X[idx_lb], self.ALD.Y[idx_lb], self.args['transform'], self.args['loader_tr_args'])
+        loader_tr = self.prepare_loader(self.ALD.X[idx_lb], self.ALD.Y[idx_lb], self.args['transform'], self.args['loader_tr_args'])
 
         for epoch in range(1, n_epoch+1):
             self._train(epoch, loader_tr, optimizer)
 
 
     def predict(self, Xte, Yte):
-        loader_te = self.prepare_data(Xte, Yte, self.args['transform'], self.args['loader_te_args'])
+        loader_te = self.prepare_loader(Xte, Yte, self.args['transform'], self.args['loader_te_args'])
         self.classifier.eval()
         P = torch.zeros(len(Yte), dtype=Yte.dtype)
         with torch.no_grad():
@@ -63,7 +63,7 @@ class Strategy():
         return P
 
 
-    def prepare_data(self, X_unlabeled, Y_unlabeled, transform, args):
+    def prepare_loader(self, X_unlabeled, Y_unlabeled, transform, args):
         '''
         Creates a dataloader from unlabeled X and Y data points
         :param: X_unlabeled: Unlabeled datapoints Y_unlabeled: Unlabeled labels

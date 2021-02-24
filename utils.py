@@ -7,6 +7,7 @@ from skimage import io, transform
 import matplotlib.pyplot as plt
 from datetime import datetime
 import numpy as np
+from autoencoder import Autoencoder
 
 def load_data_pool(train=False, arg=None) -> DataSet:
     '''
@@ -81,17 +82,33 @@ def get_embedding(dataloader) -> np.array:
     '''
     Create and save embedding, arg: handler 
     '''
-    encoder = Autoencoder()
+    encoder = Autoencoder(50)
 
-    embedding = torch.zeros([len(loader.dataset), 50])
+    embedding = torch.zeros([len(dataloader.dataset), 50])
     
     with torch.no_grad():
-        for x, y, idxs in loader:
+        for x, y, idxs in dataloader:
             out, e1 = encoder(x)
             embedding[idxs] = e1.cpu()
-    np.save('/Users/martin.lund.haug/Documents/Masteroppgave/cifar10/embedding.npy', embedding)
+    np.save('/Users/martin.lund.haug/Documents/Masteroppgave/datasets/cifar10/embedding.npy', embedding)
     embedding = embedding.numpy()
     return embedding
+
+
+def calculate_distance_matrix(self, embedding) -> np.array:
+    '''
+    Calculate and save distance matrix, input is embedding
+    '''
+    t_start = datetime.now()
+    dist_mat = np.matmul(embedding, embedding.transpose())
+    sq = np.array(dist_mat.diagonal()).reshape(len(embedding), 1)
+    dist_mat *= -2
+    dist_mat += sq
+    dist_mat += sq.transpose()
+    dist_mat = np.sqrt(dist_mat)
+    np.save('/Users/martin.lund.haug/Documents/Masteroppgave/cifar10/distance_matrix.npy', dist_mat)
+    print(f"Time taken to generate distance matrix: {datetime.now() - t_start}")
+    return dist_mat
 
 
 def save_to_file(filetype, filename, file):

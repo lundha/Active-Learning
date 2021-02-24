@@ -110,6 +110,27 @@ class DataSet:
         sample = {'images': self.images, 'labels': self.labels}
         
         return self.images, self.labels
+    
+    def get_data(self):
+        '''
+        Read the data file and get the list of images along with their labels
+        :return the data set
+        '''
+        input_data = pd.read_csv(os.path.join(self.data_dir, self.csv_file), header=None, delimiter=' ')
+        print(input_data.head())
+        return input_data
+
+    def get_classes(self):
+        '''
+        Get the list of classes from the header file
+        return: clst  the class list
+        '''
+        cl_file = self.header_file
+        with open(cl_file) as f:
+            reader = csv.reader(f)
+            cl = [r for r in reader]
+        clst = cl[0]
+        return clst
 
 
     def get_classes_from_file(self):
