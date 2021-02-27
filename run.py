@@ -84,7 +84,7 @@ rnd = 0
 print(f"Round: {rnd}")
 strategy.train()
 P = strategy.predict(X_te, Y_te)
-acc = np.zeros(10)
+acc = np.zeros(100)
 acc[rnd] = 1.0 * (Y_te==P).sum().item() / len(Y_te)
 print(f"Testing accuracy {acc[rnd]}")
 print(f"Computation time: {datetime.now()-tic}")
