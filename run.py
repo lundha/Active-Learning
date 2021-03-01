@@ -110,7 +110,7 @@ print(acc)
 print(num_labeled_samples)
 print(type(strategy).__name__)
 
-plot_learning_curves(num_labeled_samples, acc, "/", "cifar-coreset.png")
+plot_learning_curves(num_labeled_samples, acc, "/home/martlh/masteroppgave/plots/", "cifar-coreset.png")
 
 
 
