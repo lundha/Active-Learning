@@ -1,0 +1,10 @@
+{
+    "DATA_DIR": "/Users/martin.lund.haug/Documents/Masteroppgave/datasets/cifar10/",
+    "NET": "resnet34",
+    "DATA_SET": "CIFAR10",
+    "NUM_INIT_LABELED": 0,
+    "NUM_QUERY": 1000,
+    "BUDGET": 10000,
+    "NUM_WORKERS": 4,
+    "FRACTION": 1
+}
