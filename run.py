@@ -24,6 +24,7 @@ from plot import plot_learning_curves
 config = load_config()
 
 DATA_DIR = config['DATA_DIR']
+PLOT_DIR = config['PLOT_DIR']
 HEADER_FILE = DATA_DIR + "header.tfl.txt"
 FILENAME = DATA_DIR + "image_set.data"
 
@@ -79,7 +80,7 @@ P = strategy.predict(X_te, Y_te)
 
 acc = []
 num_labeled_samples = []
-num_labeled_samples.append(ALD.index['unlabeled'])
+num_labeled_samples.append(len(ALD.index['unlabeled']))
 acc.append(1.0 * (Y_te==P).sum().item() / len(Y_te))
 
 print(f"Testing accuracy {acc[rnd]}")
@@ -101,7 +102,7 @@ while len(ALD.index['labeled']) < BUDGET + NUM_INIT_LABELED:
     strategy.train()
     P = strategy.predict(X_te, Y_te)
     acc.append(1.0 * (Y_te==P).sum().item() / len(Y_te))
-    num_labeled_samples.append(ALD.index['labeled'])
+    num_labeled_samples.append(len(ALD.index['labeled']))
 
     print(f"Round: {rnd}, Testing accuracy: {acc[rnd]}, Samples labeled: {num_labeled_samples[rnd]}, Pool size: {n_pool}")
 
@@ -110,7 +111,7 @@ print(acc)
 print(num_labeled_samples)
 print(type(strategy).__name__)
 
-plot_learning_curves(num_labeled_samples, acc, "/home/martlh/masteroppgave/plots/", "cifar-coreset.png")
+#plot_learning_curves(num_labeled_samples, acc, PLOT_DIR, "cifar-coreset.png")
 
 
 
