@@ -110,8 +110,10 @@ while len(ALD.index['labeled']) < BUDGET + NUM_INIT_LABELED:
 print(acc)
 print(num_labeled_samples)
 print(type(strategy).__name__)
-
-#plot_learning_curves(num_labeled_samples, acc, PLOT_DIR, "cifar-coreset.png")
+if len(acc) == len(num_labeled_samples):
+    plot_learning_curves(num_labeled_samples, acc, PLOT_DIR, "cifar-coreset.png")
+else:
+    print("Acc is not same length as num labeled samples")
 
 
 
