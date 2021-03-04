@@ -13,11 +13,13 @@ import json
 @click.option('--fraction', default=1, help='fraction of samples to use')
 
 
-def update_config(data_dir, plot_dir, net: str, data_set: str, num_init_labeled: int, num_query: int, budget: int,
+def update_config(data_dir: str, plot_dir: str, net: str, data_set: str, num_init_labeled: int, num_query: int, budget: int,
                 num_workers: int, fraction: int) -> None:
 
     json_file = {}
 
+    json_file['DATA_DIR'] = data_dir
+    json_file['PLOT_DIR'] = plot_dir
     json_file['NET'] = net
     json_file['DATA_SET'] = data_set
     json_file['NUM_INIT_LABELED'] = num_init_labeled
