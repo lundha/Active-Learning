@@ -28,14 +28,14 @@ class ResNet18:
         self.model.fc = nn.Linear(512, self.n_classes)
 
     def get_embedding_dim(self) -> int:
-        return 512
+        return 50
 
 
 class ResNet34:
 
     def __init__(self, n_classes, n_channels, device):
         self.n_classes = n_classes
-        self.model = resnet18(pretrained=True, progress=True)
+        self.model = resnet34(pretrained=True, progress=True)
         self.__change_last_layer()
         self.device = device
         print("The code is running on {}".format(self.device))
