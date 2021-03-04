@@ -57,7 +57,6 @@ def print_images(idxs, cols, rows):
     plt.show()
 
 
-
 def print_image(dataset, idx):
     '''
     Print image from dataset. Args: dataset and index in dataset
@@ -78,13 +77,13 @@ def sub_sample_dataset(x, y, new_size):
 
     return np.array(new_x), np.array(new_y)
 
-def get_embedding(dataloader) -> np.array:
+def get_embedding(dataloader, embedding_dim) -> np.array:
     '''
     Create and save embedding, arg: handler 
     '''
-    encoder = Autoencoder(50)
+    encoder = Autoencoder(embedding_dim)
 
-    embedding = torch.zeros([len(dataloader.dataset), 50])
+    embedding = torch.zeros([len(dataloader.dataset), embedding_dim])
     
     with torch.no_grad():
         for x, y, idxs in dataloader:
