@@ -108,6 +108,7 @@ while len(ALD.index['labeled']) < BUDGET + NUM_INIT_LABELED:
 print(acc)
 print(num_labeled_samples)
 print(type(strategy).__name__)
+print(f"Total run time: {datetime.now() - tic}")
 if len(acc) == len(num_labeled_samples):
     plot_learning_curves(num_labeled_samples, acc, PLOT_DIR, "cifar-coreset.png")
 else:
