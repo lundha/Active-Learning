@@ -20,7 +20,7 @@ y_test = keras.utils.to_categorical(y_test, num_classes)
 
 import os
 
-# weights_path = 'v5-weights.81-0.3749.hdf5'
+weights_path = 'v5-weights.48-0.4228.hdf5'
 out_dir = 'v5-features'
 
 if not os.path.exists(out_dir):
