@@ -1,4 +1,3 @@
-
 import torch
 from torch import nn
 from dataloader import Resize, Normalize, ToTensor, Convert2RGB, DataHandler
@@ -9,7 +8,6 @@ import numpy as np
 from datetime import datetime
 
 class Strategy():
-
     def __init__(self, ALD, net, args):
         self.ALD = ALD
         self.net = net.model
@@ -24,7 +22,6 @@ class Strategy():
 
     def update(self, idxs_lb):
         self.idxs_lb = idxs_lb
-
 
     def _train(self, epoch, loader_tr, optimizer):
 

@@ -1,25 +1,23 @@
-
-from dataloader import Resize, Normalize, ToTensor, Convert2RGB, DataHandler
 import click
 import torch
+import os 
+import matplotlib.pyplot as plt
+import numpy as np
+from dataloader import Resize, Normalize, ToTensor, Convert2RGB, DataHandler
 from autoencoder import Autoencoder
 from utils import load_data_pool, print_image, sub_sample_dataset
 from torch.utils.data import DataLoader
 from torchvision import transforms, utils
-import matplotlib.pyplot as plt
-import numpy as np
+from query_strategies import Coreset, Random_Strategy, Strategy
 from datetime import datetime
 from kcenter_greedy import KCenterGreedy
 from skimage import io, transform
-from coreset import Coreset
 from utils import load_data
-import os 
 from activelearningdataset import ActiveLearningDataset
 from get_net import get_net
 from download_dataset import get_dataset
 from config import update_config, load_config
 from plot import plot_learning_curves
-# Load data
 
 config = load_config()
 

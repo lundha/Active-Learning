@@ -1,13 +1,13 @@
 from kcenter_greedy import KCenterGreedy
 import numpy as np
 from gurobi_solver import gurobi_solver
-from strategy import Strategy
+from .strategy import Strategy
 import pickle
 import torch
 
 class Coreset(Strategy):
     def __init__(self, ALD, net, args, tor=1e-4):
-        super(Coreset, self).__init__(ALD, net, args)
+        super().__init__(ALD, net, args)
         self.tor = tor
         self.args = args
         self.ALD = ALD
