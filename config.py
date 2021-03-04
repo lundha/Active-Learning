@@ -2,6 +2,8 @@ import click
 import json
 
 @click.command()
+@click.option('--data_dir', default='/Users/martin.lund.haug/Documents/Masteroppgave/datasets/cifar10', help='Location of data set')
+@click.option('--plot_dir', default='/Users/martin.lund.haug/Documents/Masteroppgave/core-set/plots', help='Dir for saving plot')
 @click.option('--net', default='resnet18', help='Learning network')
 @click.option('--data_set', default='CIFAR10', help='Dataset')
 @click.option('--num_init_labeled', default=0, help='number initial labeled samples')
@@ -11,7 +13,7 @@ import json
 @click.option('--fraction', default=1, help='fraction of samples to use')
 
 
-def update_config(net: str, data_set: str, num_init_labeled: int, num_query: int, budget: int,
+def update_config(data_dir, plot_dir, net: str, data_set: str, num_init_labeled: int, num_query: int, budget: int,
                 num_workers: int, fraction: int) -> None:
 
     json_file = {}
