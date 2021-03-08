@@ -1,6 +1,5 @@
 # Div files to be ignored
 CIFAR10
-plots/
 
 .idea/
 experiments/*/
