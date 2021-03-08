@@ -23,7 +23,6 @@ class ResNet18:
         self.device = device
         print("The code is running on {}".format(self.device))
     
-
     def __change_last_layer(self) -> None:
         self.model.fc = nn.Linear(512, self.n_classes)
 

@@ -1,6 +1,7 @@
 
 import torch    
 import torchvision
+from torchvision.models import resnet34
 import torchvision.transforms as transforms
 import torch.nn as nn
 import torch.nn.functional as F
@@ -33,6 +34,20 @@ class Autoencoder(nn.Module):
         return x, e1
 
 
+class ResNetAutoencoder:
+
+    def __init__(self, n_classes, n_channels, embedding_dim, device):
+        self.n_classes = n_classes
+        self.embedding_dim = embedding_dim
+        self.model = resnet34(pretrained=True, progress=True)
+        self.__change_last_layer()
+        self.device = device
+        print("The code is running on {}".format(self.device))
+
+    def __change_last_layer(self) -> None:
+        self.model.fc = nn.Linear(512, self.embedding_dim)
+
 
 if __name__ == "__main__":
-    pass
+    encoder = ResNetAutoencoder(10,3,512,'cpu')
+    print(encoder.model)

@@ -6,6 +6,8 @@ from torch.utils.data import DataLoader
 import torch.optim as optim
 import numpy as np
 from datetime import datetime
+import torch.nn.functional as F
+
 
 class Strategy():
     def __init__(self, ALD, net, args):
@@ -50,7 +52,11 @@ class Strategy():
     def predict(self, Xte, Yte):
         loader_te = self.prepare_loader(Xte, Yte, self.args['transform'], self.args['loader_te_args'])
         self.classifier.eval()
-        P = torch.zeros(len(Yte), dtype=Yte.dtype)
+        try:
+            P = torch.zeros(len(Yte), dtype=Yte.dtype)
+        except Exception as e:
+            print(f"Exception: {str(e)}")
+            P = np.zeros(len(Yte), dtype=Yte.dtype)
         with torch.no_grad():
             for x,y,idx in loader_te:
                 x,y = x.to(self.device), y.to(self.device)
@@ -58,6 +64,23 @@ class Strategy():
                 pred = out.max(1)[1]
                 P[idx] = pred.cpu()
         return P
+
+    def predict_prob(self, X, Y):
+        loader_te = self.prepare_loader(X, Y, self.args['transform'], self.args['loader_te_args'])
+
+        self.classifier.eval()
+        try:
+            probs = torch.zeros([len(Y), len(np.unique(Y))])
+        except Exception as e:
+            print(f"Exception: {str(e)}")
+            P = np.zeros(len(Y), dtype=Y.dtype)
+        with torch.no_grad():
+            for x, y, idxs in loader_te:
+                x, y = x.to(self.device), y.to(self.device)
+                out = self.classifier(x)
+                prob = F.softmax(out, dim=1)
+                probs[idxs] = prob.cpu()
+        return probs
 
 
     def prepare_loader(self, X_unlabeled, Y_unlabeled, transform, args):
