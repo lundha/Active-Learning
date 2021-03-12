@@ -6,6 +6,7 @@ from keras.models import Sequential, Model
 from keras.layers import Dense, Dropout, Activation, Flatten
 from keras.layers import Conv2D, MaxPooling2D, BatchNormalization
 import os
+from random import randint
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 from PIL import Image
@@ -89,31 +90,46 @@ def plot_tsne_images(data_x, tx, ty):
     full_image.save(os.path.join(out_dir, "fc1_features_tsne_default.jpg"))
 
 # TSNE with categories
-def plot_tsne_categories(data_x, data_y, tx, ty, queried_idxs, out_dir):
+def plot_tsne_categories(data_x, data_y, tx, ty, queried_idxs, out_dir, args):
 
     # have to re-load cifar to get y_test back in its original form
     # _, (x_test, y_test) = cifar10.load_data()
+    dataset, strategy = args['dataset'], args['strategy']
+    seed = randint(1,100)
     data_y = np.asarray(data_y)
 
     plt.figure(figsize = (16,12))
 
-    mapped_y = map_list(data_y, queried_idxs)
-    mapped_y = np.asarray(mapped_y)
+    for j in range(len(queried_idxs)):
 
-    classes = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
-    for i in range(len(classes)):
-        # y_i is a vector that is true on corresponding indexes with data_y for each class in classes
-        # i.e true for all 'airplane' elements in data_y on first iteration. This is to correctly color the
-        # scatter plot
-        y_i = data_y == i
-        print(y_i)
-        plt.scatter(tx[y_i[:,0]], ty[y_i[:,0]], label=classes[i])
-        # An idea would be to do an equal masking with queried elements
-    #plt.legend(loc=4)
-    plt.scatter(tx[mapped_y], ty[mapped_y], marker="^", c='black')
-    plt.gca().invert_yaxis()
-    plt.savefig(os.path.join(out_dir, "fc1_features_tsne_default_pts.jpg"), bbox_inches='tight')
-    plt.show()
+        mapped_y = map_list(data_y, queried_idxs[j])
+        mapped_y = np.asarray(mapped_y)
+
+        classes = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+        for i in range(len(classes)):
+            # y_i is a vector that is true on corresponding indexes with data_y for each class in classes
+            # i.e true for all 'airplane' elements in data_y on first iteration. This is to correctly color the
+            # scatter plot
+            y_i = data_y == i
+            plt.scatter(tx[y_i[:,0]], ty[y_i[:,0]], label=classes[i])
+            # An idea would be to do an equal masking with queried elements
+        #plt.legend(loc=4)
+        plt.scatter(tx[mapped_y], ty[mapped_y], marker="^", c='black')
+        plt.gca().invert_yaxis()
+
+        try:
+            strat = strategy[j]
+        except Exception as e:
+            print(f"Exception strategy: {str(e)}")
+            strat = f"exception_{j}"
+        try:
+            len_q_idx = len(queried_idxs[j])
+        except Exception as e:
+            print(f"Exception len_q_idx: {str(e)}")
+            len_q_idx = 200
+
+        plt.savefig(os.path.join(out_dir, f"TSNE_{dataset}_{len_q_idx}_{strat}_{seed}.eps"))
+        plt.show()
 
 def plots_tsne():
     pass

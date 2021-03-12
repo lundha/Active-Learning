@@ -3,7 +3,7 @@ from keras.datasets import cifar10
 import numpy as np
 import os
 
-def plot_tsne(x: list, y: list, queried_idxs: list, num_classes: int = 10) -> None:
+def plot_tsne(x: list, y: list, queried_idxs: list, num_classes: int, tsne_args: dict) -> None:
     '''
     Create T-SNE plot based on data pool. Highlight queried data points with black color
     '''
@@ -17,7 +17,7 @@ def plot_tsne(x: list, y: list, queried_idxs: list, num_classes: int = 10) -> No
 
     model = kf.model(x=x, num_classes=num_classes, weight_path=weight_path)
     tx, ty = kf.feature_extractor(model, x, out_dir)
-    kf.plot_tsne_categories(x, y, tx, ty, queried_idxs, out_dir)
+    kf.plot_tsne_categories(x, y, tx, ty, queried_idxs, out_dir, tsne_args)
 
 
 
