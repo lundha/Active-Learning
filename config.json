@@ -1,1 +1,12 @@
-{"DATA_DIR": "/Users/martin.lund.haug/Documents/Masteroppgave/datasets/cifar10", "PLOT_DIR": "/Users/martin.lund.haug/Documents/Masteroppgave/core-set/plots", "NET": "resnet18", "DATA_SET": "CIFAR10", "NUM_INIT_LABELED": 0, "NUM_QUERY": 200, "BUDGET": 10000, "NUM_WORKERS": 0, "FRACTION": 1}
+{
+    "DATA_DIR": "/Users/martin.lund.haug/Documents/Masteroppgave/datasets/cifar10",
+    "PLOT_DIR": "/Users/martin.lund.haug/Documents/Masteroppgave/core-set/plots",
+    "NET": "resnet18",
+    "STRATEGY": "coreset",
+    "DATA_SET": "CIFAR10",
+    "NUM_INIT_LABELED": 0,
+    "NUM_QUERY": 200,
+    "BUDGET": 10000,
+    "NUM_WORKERS": 0,
+    "FRACTION": 1
+}

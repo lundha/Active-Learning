@@ -5,6 +5,7 @@ import json
 @click.option('--data_dir', default='/Users/martin.lund.haug/Documents/Masteroppgave/datasets/cifar10', help='Location of data set')
 @click.option('--plot_dir', default='/Users/martin.lund.haug/Documents/Masteroppgave/core-set/plots', help='Dir for saving plot')
 @click.option('--net', default='resnet18', help='Learning network')
+@click.option('--strategy', default='coreset', help='AL strategy')
 @click.option('--data_set', default='CIFAR10', help='Dataset')
 @click.option('--num_init_labeled', default=0, help='number initial labeled samples')
 @click.option('--num_query', default=1000, help='Number of samples to query each round')
@@ -13,7 +14,7 @@ import json
 @click.option('--fraction', default=1, help='fraction of samples to use')
 
 
-def update_config(data_dir: str, plot_dir: str, net: str, data_set: str, num_init_labeled: int, num_query: int, budget: int,
+def update_config(data_dir: str, plot_dir: str, net: str, strategy: str, data_set: str, num_init_labeled: int, num_query: int, budget: int,
                 num_workers: int, fraction: int) -> None:
 
     json_file = {}
@@ -21,6 +22,7 @@ def update_config(data_dir: str, plot_dir: str, net: str, data_set: str, num_ini
     json_file['DATA_DIR'] = data_dir
     json_file['PLOT_DIR'] = plot_dir
     json_file['NET'] = net
+    json_file['STRATEGY'] = strategy
     json_file['DATA_SET'] = data_set
     json_file['NUM_INIT_LABELED'] = num_init_labeled
     json_file['NUM_QUERY'] = num_query
