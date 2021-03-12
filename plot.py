@@ -13,19 +13,19 @@ parser.add_argument("--eval_at", default="num_samples", help="X-axis, num_evals,
 parser.add_argument("--format", default="png", help="File format, e.g png, pdf")
 
 
-def plot_learning_curves(data_x, data_y, plot_dir, filename, title="Learning curve", x_label="Num samples", y_label="Accuracy"):
+def plot_learning_curves(data_x, data_y, plot_dir, args, title="Learning curve", x_label="Num samples", y_label="Accuracy"):
     '''
     Plot result of AL/ML
     :params: data_x: Number of samples/Percentage samples
     :params: data_y: Accuracy
     :plot_dir: Dir for saving plot
-    :filename: Name of plot file
     '''
     plt.figure("Learning curves")
     plt.plot(data_x, data_y)
     plt.title(title)
     plt.xlabel(x_label)
     plt.ylabel(y_label)
+    filename = f"{args['DATA_SET']}_{config['NET']}_{config['NUM_QUERY']}_{config['STRATEGY']}.eps"
     plt.savefig(os.path.join(plot_dir, filename))
 
 
