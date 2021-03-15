@@ -1,40 +1,36 @@
 import click
 import json
+import argparse
 
-@click.command()
-@click.option('--data_dir', default='/Users/martin.lund.haug/Documents/Masteroppgave/datasets/cifar10', help='Location of data set')
-@click.option('--plot_dir', default='/Users/martin.lund.haug/Documents/Masteroppgave/core-set/plots', help='Dir for saving plot')
-@click.option('--net', default='resnet18', help='Learning network')
-@click.option('--strategy', default='coreset', help='AL strategy')
-@click.option('--data_set', default='CIFAR10', help='Dataset')
-@click.option('--num_init_labeled', default=0, help='number initial labeled samples')
-@click.option('--num_query', default=1000, help='Number of samples to query each round')
-@click.option('--budget', default=10000, help='Budget for sample annotation')
-@click.option('--num_workers', default=4, help='number of workers in torch')
-@click.option('--fraction', default=1, help='fraction of samples to use')
+parser = argparse.ArgumentParser()
+parser.add_argument('--data_dir', default='/Users/martin.lund.haug/Documents/Masteroppgave/datasets/cifar10', help='Location of data set')
+parser.add_argument('--plot_dir', default='/Users/martin.lund.haug/Documents/Masteroppgave/core-set/plots', help='Dir for saving plot')
+parser.add_argument('--net', default='resnet18', help='Learning network')
+parser.add_argument('--strategy', default='coreset', help='AL strategy')
+parser.add_argument('--data_set', default='CIFAR10', help='Dataset')
+parser.add_argument('--num_init_labeled', default=0, type=int, help='number initial labeled samples')
+parser.add_argument('--num_query', default=1000, type=int, help='Number of samples to query each round')
+parser.add_argument('--budget', default=10000, type=int, help='Budget for sample annotation')
+parser.add_argument('--num_workers', default=4, type=int, help='number of workers in torch')
+parser.add_argument('--fraction', default=1, type=int, help='fraction of samples to use')
 
+args = vars(parser.parse_args())
 
-def update_config(data_dir: str, plot_dir: str, net: str, strategy: str, data_set: str, num_init_labeled: int, num_query: int, budget: int,
-                num_workers: int, fraction: int) -> None:
+def update_config(args) -> None:
 
-    json_file = {}
+    new_config = {}
+    prev_config = load_config()
+    for key, value in prev_config.items():
+        new_config.update({key : return_latest_updated_value(value, args.get(key.lower()))})
+    print(new_config)
 
-    json_file['DATA_DIR'] = data_dir
-    json_file['PLOT_DIR'] = plot_dir
-    json_file['NET'] = net
-    json_file['STRATEGY'] = strategy
-    json_file['DATA_SET'] = data_set
-    json_file['NUM_INIT_LABELED'] = num_init_labeled
-    json_file['NUM_QUERY'] = num_query
-    json_file['BUDGET'] = budget
-    json_file['NUM_WORKERS'] = num_workers
-    json_file['FRACTION'] = fraction
 
     with open("config.json", 'w') as f:
-        json.dump(json_file, f)
+        json.dump(new_config, f)
     f.close()
 
-def load_config() -> list:
+
+def load_config() -> dict:
 
     with open("config.json") as f:
         config = json.load(f)
@@ -42,5 +38,13 @@ def load_config() -> list:
     
     return config
 
+def return_latest_updated_value(old_value, new_value):
+
+    if old_value == new_value:
+        return old_value
+    else:
+        return new_value
+
+
 if __name__ == "__main__":
-    update_config()
+    update_config(args)

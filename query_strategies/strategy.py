@@ -28,11 +28,15 @@ class Strategy():
     def _train(self, epoch, loader_tr, optimizer):
 
         for batch_idx, (x,y,idx) in enumerate(loader_tr):
+            y = (torch.max(y,1)[0]).type(torch.LongTensor)
             x,y = x.to(self.device), y.to(self.device)
             optimizer.zero_grad()
             out = self.classifier(x)
             loss = nn.CrossEntropyLoss()
-            output = loss(out, y)
+            try:
+                output = loss(out, y)
+            except Exception as e:
+                output = loss(out,y)
             output.backward()
             optimizer.step()
 

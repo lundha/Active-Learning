@@ -16,6 +16,7 @@ dependencies:
   - pdbpp
   - cloudpickle
   - gurobi
+  - keras
   - pandas 
   - numpy
   - matplotlib

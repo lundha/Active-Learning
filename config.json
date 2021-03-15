@@ -4,7 +4,7 @@
     "NET": "resnet18",
     "STRATEGY": "coreset",
     "DATA_SET": "CIFAR10",
-    "NUM_INIT_LABELED": 0,
+    "NUM_INIT_LABELED": 100,
     "NUM_QUERY": 200,
     "BUDGET": 10000,
     "NUM_WORKERS": 0,
