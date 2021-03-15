@@ -77,15 +77,7 @@ X_tr, Y_tr, X_te, Y_te = get_dataset(DATA_SET, Fraction=FRACTION)
 (X_tr_keras, Y_tr_keras), (X_te_keras, Y_te_keras) = cifar10.load_data()
 Y_tr, Y_te = np.asarray(Y_tr), np.asarray(Y_te)
 
-###############
 
-print(X_tr.shape, Y_tr.shape, X_te.shape, Y_te.shape)
-print(X_tr_keras.shape, Y_tr_keras.shape, X_te_keras.shape, Y_te_keras.shape)
-
-print(type(X_tr), type(Y_tr), type(X_te), type(Y_te))
-print(type(X_tr_keras), type(Y_tr_keras), type(X_te_keras), type(Y_te_keras))
-
-###############
 X_te_tsne, Y_te_tsne = deepcopy(X_te), deepcopy(Y_te)
 
 # Generate initially labeled pool 
@@ -120,15 +112,12 @@ print(f"Round: {rnd}")
 
 strategy.train()
 P = strategy.predict(X_te, Y_te)
-print(P)
-print(len(P))
-print(len(Y_te))
+
 acc = []
 num_labeled_samples = []
 num_labeled_samples.append(len(ALD.index['labeled']))
 acc.append(1.0 * (Y_te==P).sum().item() / len(Y_te))
-print(1.0 * (Y_te==P).sum().item()/len(Y_te))
-print((Y_te==P).sum().item())
+
 print(f"Testing accuracy {acc[rnd]}, Computation time: {datetime.now()-tic}")
 
 
@@ -145,15 +134,12 @@ plot_tsne(X_te_tsne, Y_te_tsne, list_queried_idxs, num_classes, tsne_args)
 print(f"Total run time: {datetime.now()-tic}")
 '''
 
-'''
-Hadde en jente på besøk på lørdagen, hun kom kl2100 og hun hadde drukket opp vinglasset sitt kl0100 
-Men hyggelig, vi pratet om skole og alt sammen
-'''
-
 while len(ALD.index['labeled']) < BUDGET + NUM_INIT_LABELED:
 
     rnd += 1
     n_pool = len(ALD.index['unlabeled'])
+
+    NUM_QUERY = min(NUM_QUERY, NUM_INIT_LABELED + BUDGET - len(ALD.index['labeled']))
 
     queried_idxs = strategy.query(NUM_QUERY, n_pool)
     print(f"Num queried indexes: {len(queried_idxs)}")
@@ -162,9 +148,7 @@ while len(ALD.index['labeled']) < BUDGET + NUM_INIT_LABELED:
     
     strategy.train()
     P = strategy.predict(X_te, Y_te)
-    print(P)
     acc.append(1.0 * (Y_te==P).sum().item() / len(Y_te))
-    print(1.0 * (Y_te==P).sum().item() / len(Y_te))
     num_labeled_samples.append(len(ALD.index['labeled']))
 
     print(f"Round: {rnd}, Testing accuracy: {acc[rnd]}, Samples labeled: {num_labeled_samples[rnd]}, Pool size: {n_pool}")

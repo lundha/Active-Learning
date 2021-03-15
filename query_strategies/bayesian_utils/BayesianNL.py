@@ -130,11 +130,11 @@ class NeuralClassification(nn.Module):
         for epoch in range(num_epochs):
             scheduler.step()
             losses, kls, performances = [], [], []
-            for (x, y) in dataloader:
+            for (x, y, idx) in dataloader:
                 optimizer.zero_grad()
                 x, y = to_gpu(x, y.type(torch.LongTensor).squeeze())
                 y_pred = self.forward(x)
-                step_loss, kl = self._compute_loss(y, y_pred, len(x) / len(data.index['train']))
+                step_loss, kl = self._compute_loss(y, y_pred, len(x) / len(data.index['labeled']))
                 step_loss.backward()
                 optimizer.step()
 
@@ -290,7 +290,7 @@ class NeuralClassification(nn.Module):
                 drop_last=True,
                 num_workers=4
             )
-            for (x, y) in dataloader:
+            for (x, y, idx) in dataloader:
                 x, y = utils.to_gpu(x, y.type(torch.LongTensor).squeeze())
                 y_pred_samples = self.forward(x, num_samples=100)
                 y_pred = self._compute_predictive_posterior(y_pred_samples)[None, :, :]
