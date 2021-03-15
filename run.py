@@ -3,6 +3,8 @@ import torch
 import os 
 import matplotlib.pyplot as plt
 import numpy as np
+import argparse
+
 from dataloader import Resize, Normalize, ToTensor, Convert2RGB, DataHandler
 from autoencoder import Autoencoder
 from utils.utils import load_data_pool, print_image, sub_sample_dataset, load_data
@@ -22,6 +24,7 @@ from tsne_compare_strategies import plot_tsne
 from copy import deepcopy
 from keras.datasets import cifar10
 
+
 config = load_config()
 
 DATA_DIR = config['DATA_DIR']
@@ -37,6 +40,12 @@ NUM_QUERY = config['NUM_QUERY']
 BUDGET = config['BUDGET']
 NUM_WORKERS = config['NUM_WORKERS']
 FRACTION = config['FRACTION']
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--strategy', default=STRATEGY, type=str, help='Choose different strategy than specified in config')
+args = parser.parse_args()
+
+STRATEGY = args.strategy
 
 load_data_args = {'CIFAR10':
             {'data_dir': "/Users/martin.lund.haug/Documents/Masteroppgave/datasets/cifar10/",
@@ -56,7 +65,7 @@ learning_args = {'CIFAR10':
     }
 
 tsne_args = {'dataset': 'CIFAR10',
-            'strategy': ['coreset', 'uncertainty', 'max_entropy', 'bayesian_sparse_set']
+            'strategy': ['bayesian_sparse_set', 'coreset', 'uncertainty', 'max_entropy']
         }
 
 data_args = load_data_args[DATA_SET]
@@ -65,13 +74,13 @@ args = learning_args[DATA_SET]
 tic = datetime.now()
 
 #X_tr, Y_tr, X_te, Y_te = get_dataset(DATA_SET, Fraction=0.5)
-_, (X_te, Y_te) = cifar10.load_data()
-Y_te = np.asarray(Y_te)
-print(type(Y_te), Y_te.shape)
+(X_tr, Y_tr), (X_te, Y_te) = cifar10.load_data()
+Y_tr, Y_te = np.asarray(Y_tr), np.asarray(Y_te)
+
 X_te_tsne, Y_te_tsne = deepcopy(X_te), deepcopy(Y_te)
 
 # Generate initially labeled pool 
-ALD = ActiveLearningDataset(X_te, Y_te, NUM_INIT_LABELED)
+ALD = ActiveLearningDataset(X_tr, Y_tr, NUM_INIT_LABELED)
 
 # Load network 
 net = get_net(NET, data_args)
@@ -99,10 +108,8 @@ print(f"Number of training samples: {n_pool}, Number of testing samples: {len(Y_
 # Round 0 accuracy
 rnd = 0
 print(f"Round: {rnd}")
-print(type(Y_te), Y_te.shape)
 
 strategy.train()
-
 P = strategy.predict(X_te, Y_te)
 
 acc = []
@@ -118,11 +125,10 @@ queried_idxs = strategy.query(NUM_QUERY, n_pool)
 queried_idxs = np.asarray(queried_idxs)
 list_queried_idxs.append(queried_idxs)
 print(f"Num queried indexes: {len(queried_idxs)}")
-print(f"Len queried indexes: {len(list_queried_idxs)}")
 
-num_classes = 10
 
 '''
+num_classes = 10
 plot_tsne(X_te_tsne, Y_te_tsne, list_queried_idxs, num_classes, tsne_args)
 print(f"Total run time: {datetime.now()-tic}")
 '''
@@ -132,7 +138,6 @@ while len(ALD.index['labeled']) < BUDGET + NUM_INIT_LABELED:
     rnd += 1
     n_pool = len(ALD.index['unlabeled'])
 
-    
     queried_idxs = strategy.query(NUM_QUERY, n_pool)
     print(f"Num queried indexes: {len(queried_idxs)}")
     ALD.move_from_unlabeled_to_labeled(queried_idxs)
