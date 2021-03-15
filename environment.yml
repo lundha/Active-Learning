@@ -29,3 +29,4 @@ dependencies:
     - pycodestyle==2.5.0
     - pyflakes==2.1.1
     - opencv.contrib-python
+    - gtimer

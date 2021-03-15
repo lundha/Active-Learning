@@ -94,7 +94,7 @@ class ResNet(nn.Module):
         super(ResNet, self).__init__()
         self.initial_pool = initial_pool
         self.inplanes = inplanes
-        self.conv1 = nn.Conv2d(32, inplanes, kernel_size=initial_kernel_size, stride=2, padding=1,
+        self.conv1 = nn.Conv2d(3, inplanes, kernel_size=initial_kernel_size, stride=2, padding=1,
                                bias=False)
         self.bn1 = nn.BatchNorm2d(self.inplanes)
         self.relu = nn.ReLU(inplace=True)

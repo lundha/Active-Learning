@@ -88,7 +88,7 @@ class Dataset(data.Dataset):
         x = self.transform(x) if self.transform else torch.from_numpy(x).float()
         # if self.data_type == 'train':
         #     return x, torch.from_numpy(y).float(), self.w
-
+        print(type(x), type(y), x.shape, y.shape)
         return x, torch.from_numpy(y).float()
 
 

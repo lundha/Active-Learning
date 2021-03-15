@@ -9,7 +9,7 @@ from .utils_bayesian import *
 from .al_data_set import Dataset
 from sklearn.metrics import roc_auc_score
 from ..strategy import Strategy
-
+from PIL import Image
 
 class DataHandler(Dataset):
     def __init__(self, X, Y, transform=None):
@@ -165,12 +165,17 @@ class NeuralClassification(nn.Module):
             mean, cov = self.linear._compute_posterior()
             jitter = to_gpu(torch.eye(len(cov)) * 1e-6)
             theta_samples = MVN(mean, cov + jitter).sample(torch.Size([J])).view(J, -1, self.linear.out_features)
+            '''
             dataloader = DataLoader(Dataset(data, 'unlabeled', transform=transform),
                                     batch_size=256, shuffle=False)
+            '''
 
-            for (x, _) in dataloader:
-                print(x.shape)
-                #x = to_gpu(x)
+            idx_lb = data.index['unlabeled']
+            handler = DataHandler(X=data.X[idx_lb], Y=data.Y[idx_lb], transform=self.args['transform'])
+            dataloader = DataLoader(handler, shuffle=False, batch_size=256, num_workers=0)
+
+            for (x, _, _) in dataloader:
+                x = to_gpu(x)
                 feat_x.append(self.encode(x))
 
             feat_x = torch.cat(feat_x)
