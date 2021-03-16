@@ -116,15 +116,15 @@ def plot_tsne(x: list, y: list, queried_idxs: list, num_classes: int, tsne_args:
     '''
     Create T-SNE plot based on data pool. Highlight queried data points with black color
     '''
-    weight_path = '/Users/martin.lund.haug/Documents/Masteroppgave/core-set/tsne/v5-weights.48-0.4228.hdf5'
-    out_dir = 'v5-features'
+    weight_path = './tsne/v5-weights.48-0.4228.hdf5'
+    out_dir = 'tsne_plot'
     x = x.astype('float32')
     x /= 255
     
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
-    model = tnse_model(x=x, num_classes=num_classes, weight_path=weight_path)
+    model = tsne_model(x=x, num_classes=num_classes, weight_path=weight_path)
     tx, ty = tsne_feature_extractor(model, x, out_dir)
     plot_tsne_categories(x, y, tx, ty, queried_idxs, out_dir, tsne_args)
 

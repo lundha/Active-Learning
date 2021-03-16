@@ -128,7 +128,7 @@ def plot_tsne_categories(data_x, data_y, tx, ty, queried_idxs, out_dir, args):
             print(f"Exception len_q_idx: {str(e)}")
             len_q_idx = 200
 
-        plt.savefig(os.path.join(out_dir, f"TSNE_{dataset}_{len_q_idx}_{strat}_{seed}.eps"))
+        plt.savefig(os.path.join(out_dir, f"TSNE_{dataset}_q{len_q_idx}_{strat}_{seed}.eps"))
 
 def plots_tsne():
     pass
