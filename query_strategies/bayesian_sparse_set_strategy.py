@@ -20,7 +20,6 @@ class Bayesian_Sparse_Set_Strategy(Strategy):
         self.nl = self.load_nl()   
         
     def query(self, num_query, n_pool):
-        print("****QUERY****")
         cs = ProjectedFrankWolfe(self.nl, self.ALD, self.num_projections, transform=self.args['transform'], **self.cs_kwargs)
         batch = cs.build(num_query)
         return batch

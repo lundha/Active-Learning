@@ -16,7 +16,6 @@ dependencies:
   - pdbpp
   - cloudpickle
   - gurobi
-  - keras
   - pandas 
   - numpy
   - matplotlib
@@ -30,3 +29,5 @@ dependencies:
     - pyflakes==2.1.1
     - opencv.contrib-python
     - gtimer
+    - keras
+    - tensorflow

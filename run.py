@@ -64,19 +64,16 @@ learning_args = {'CIFAR10':
         }
     }
 
-tsne_args = {'dataset': 'CIFAR10',
-            'strategy': ['bayesian_sparse_set', 'coreset', 'uncertainty', 'max_entropy']
-        }
 
 data_args = load_data_args[DATA_SET]
 args = learning_args[DATA_SET]
 
-tic = datetime.now()
 
 X_tr, Y_tr, X_te, Y_te = get_dataset(DATA_SET, Fraction=FRACTION)
 (X_tr_keras, Y_tr_keras), (X_te_keras, Y_te_keras) = cifar10.load_data()
-Y_tr, Y_te = np.asarray(Y_tr), np.asarray(Y_te)
 
+Y_tr_keras, Y_te_keras = torch.from_numpy(np.array(Y_tr_keras)), torch.from_numpy(np.array(Y_te_keras))
+Y_tr_keras, Y_te_keras = torch.squeeze(Y_tr_keras), torch.squeeze(Y_tr_keras)
 
 X_te_tsne, Y_te_tsne = deepcopy(X_te), deepcopy(Y_te)
 
@@ -118,7 +115,7 @@ num_labeled_samples = []
 num_labeled_samples.append(len(ALD.index['labeled']))
 acc.append(1.0 * (Y_te==P).sum().item() / len(Y_te))
 
-print(f"Testing accuracy {acc[rnd]}, Computation time: {datetime.now()-tic}")
+print(f"Testing accuracy {acc[rnd]}")
 
 
 print(f"Query indexes and plotting")
@@ -128,13 +125,10 @@ list_queried_idxs.append(queried_idxs)
 print(f"Num queried indexes: {len(queried_idxs)}")
 
 
-'''
-num_classes = 10
-plot_tsne(X_te_tsne, Y_te_tsne, list_queried_idxs, num_classes, tsne_args)
-print(f"Total run time: {datetime.now()-tic}")
-'''
 
 while len(ALD.index['labeled']) < BUDGET + NUM_INIT_LABELED:
+
+    tic = datetime.now()
 
     rnd += 1
     n_pool = len(ALD.index['unlabeled'])
@@ -151,7 +145,7 @@ while len(ALD.index['labeled']) < BUDGET + NUM_INIT_LABELED:
     acc.append(1.0 * (Y_te==P).sum().item() / len(Y_te))
     num_labeled_samples.append(len(ALD.index['labeled']))
 
-    print(f"Round: {rnd}, Testing accuracy: {acc[rnd]}, Samples labeled: {num_labeled_samples[rnd]}, Pool size: {n_pool}")
+    print(f"Round: {rnd}, Testing accuracy: {acc[rnd]}, Samples labeled: {num_labeled_samples[rnd]}, Pool size: {n_pool}, Iteration time: {datetime.now()-tic}")
 
     
 print(acc)
