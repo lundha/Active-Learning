@@ -5,6 +5,9 @@ import numpy as np
 # Split into training and test set
 # Split into labeled and unlabeled data
 # Move data from unlabeled to labeled
+class Dataset():
+    pass
+
 
 
 class ActiveLearningDataset:

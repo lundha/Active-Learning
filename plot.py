@@ -25,7 +25,7 @@ def plot_learning_curves(data_x, data_y, plot_dir, config, title="Learning curve
     plt.title(title)
     plt.xlabel(x_label)
     plt.ylabel(y_label)
-    filename = f"{config['DATA_SET']}_{config['NET']}_{config['NUM_QUERY']}_{config['STRATEGY']}.eps"
+    filename = f"{config['DATA_SET']}_{config['NET']}_q{config['NUM_QUERY']}_{config['STRATEGY']}.eps"
     plt.savefig(os.path.join(plot_dir, filename))
 
 

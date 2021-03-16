@@ -13,7 +13,7 @@ from PIL import Image
 import numpy as np
 from utils.utils import map_list
 
-def model(x, num_classes=10, weight_path="/tsne/v5-weights.48-0.4228.hdf5"):
+def tsne_model(x, num_classes=10, weight_path="/tsne/v5-weights.48-0.4228.hdf5"):
 
     model = Sequential()
 
@@ -46,7 +46,7 @@ def model(x, num_classes=10, weight_path="/tsne/v5-weights.48-0.4228.hdf5"):
     return model 
 
 
-def feature_extractor(model, data_x, out_dir):
+def tsne_feature_extractor(model, data_x, out_dir):
     batch_size = 32
 
     # Get featues
@@ -129,7 +129,6 @@ def plot_tsne_categories(data_x, data_y, tx, ty, queried_idxs, out_dir, args):
             len_q_idx = 200
 
         plt.savefig(os.path.join(out_dir, f"TSNE_{dataset}_{len_q_idx}_{strat}_{seed}.eps"))
-        plt.show()
 
 def plots_tsne():
     pass
