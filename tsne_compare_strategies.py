@@ -30,8 +30,7 @@ def compare_tsne():
 
     DATA_DIR = config['DATA_DIR']
     PLOT_DIR = config['PLOT_DIR']
-    HEADER_FILE = DATA_DIR + "header.tfl.txt"
-    FILENAME = DATA_DIR + "image_set.data"
+
 
     DATA_SET = config['DATA_SET']
     NET = config['NET']
@@ -40,23 +39,44 @@ def compare_tsne():
     NUM_WORKERS = config['NUM_WORKERS']
     NUM_INIT_LABELED = config['NUM_INIT_LABELED']
     STRATEGIES = ['bayesian_sparse_set', 'coreset', 'uncertainty', 'max_entropy']
+    DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
     load_data_args = {'CIFAR10':
-                {'data_dir': "/Users/martin.lund.haug/Documents/Masteroppgave/datasets/cifar10/",
-                'num_classes': 10,
-                'file_ending': ".png",
-                'num_channels': 3,
-                'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+                {
+                    'data_dir': "../datasets/cifar10/",
+                    'num_classes': 10,
+                    'file_ending': ".png",
+                    'num_channels': 3,
+                    'device': DEVICE
+
+                },
+                'PLANKTON':
+                {
+                    'data_dir': "",
+                    'num_classes': 0,
+                    'file_ending': ".",
+                    'num_channels': 3,
+                    'device': DEVICE
+
                 }
             }
 
     learning_args = {'CIFAR10': 
-            {'n_epoch': 10, 
-            'transform': transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]), 
-            'loader_tr_args': {'batch_size': 64, 'num_workers': NUM_WORKERS},
-            'loader_te_args': {'batch_size': 1000, 'num_workers': NUM_WORKERS},
+            {
+                'n_epoch': 10, 
+                'transform': transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]), 
+                'loader_tr_args': {'batch_size': 64, 'num_workers': NUM_WORKERS},
+                'loader_te_args': {'batch_size': 1000, 'num_workers': NUM_WORKERS},
+            },
+            'PLANKTON':
+            {
+                'n_epoch': 10, 
+                'transform': transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]), 
+                'loader_tr_args': {'batch_size': 64, 'num_workers': NUM_WORKERS},
+                'loader_te_args': {'batch_size': 1000, 'num_workers': NUM_WORKERS},         
             }
+
         }
 
     tsne_args = {'dataset': 'CIFAR10',
@@ -66,10 +86,12 @@ def compare_tsne():
     data_args = load_data_args[DATA_SET]
     args = learning_args[DATA_SET]
 
+    HEADER_FILE = data_args['data_dir'] + "header.tfl.txt"
+    FILENAME = data_args['data_dir'] + "image_set.data"
 
     (X_tr, Y_tr), (X_te, Y_te) = cifar10.load_data()
-    Y_tr, Y_te = np.asarray(Y_tr), np.asarray(Y_te)
 
+    num_classes = len(Y_te)
 
     X_te_tsne, Y_te_tsne = deepcopy(X_te), deepcopy(Y_te)
 
@@ -80,9 +102,9 @@ def compare_tsne():
     net = get_net(NET, data_args)
 
     list_queried_idxs = []
-    tic = datetime.now()
 
     for STRATEGY in STRATEGIES:
+        tic = datetime.now()
 
         if STRATEGY == 'coreset':
             strategy = Coreset(ALD, net, args)
@@ -105,7 +127,6 @@ def compare_tsne():
         list_queried_idxs.append(queried_idxs)
         print(f"Num queried indexes: {len(queried_idxs)}")
 
-        num_classes = 10
         plot_tsne(X_te_tsne, Y_te_tsne, list_queried_idxs, num_classes, tsne_args)
         print(f"Total run time: {datetime.now()-tic}")
 
@@ -122,7 +143,14 @@ def plot_tsne(x: list, y: list, queried_idxs: list, num_classes: int, tsne_args:
     
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
-
+    ######
+    try:
+        print(queried_idxs.shape)
+    except Exception as e:
+        print(queried_idxs)
+        print(str(e))
+        pass
+    ######
     model = tsne_model(x=x, num_classes=num_classes, weight_path=weight_path)
     tx, ty = tsne_feature_extractor(model, x, out_dir)
     plot_tsne_categories(x, y, tx, ty, queried_idxs, out_dir, tsne_args)

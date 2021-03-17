@@ -39,6 +39,7 @@ NUM_QUERY = config['NUM_QUERY']
 BUDGET = config['BUDGET']
 NUM_WORKERS = config['NUM_WORKERS']
 FRACTION = config['FRACTION']
+DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--strategy', default=STRATEGY, type=str, help='Choose different strategy than specified in config')
@@ -47,20 +48,38 @@ args = parser.parse_args()
 STRATEGY = args.strategy
 
 load_data_args = {'CIFAR10':
-            {'data_dir': "/Users/martin.lund.haug/Documents/Masteroppgave/datasets/cifar10/",
-            'num_classes': 10,
-            'file_ending': ".png",
-            'num_channels': 3,
-            'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+            {
+                'data_dir': "../datasets/cifar10/",
+                'num_classes': 10,
+                'file_ending': ".png",
+                'num_channels': 3,
+                'device': DEVICE
+            }
+            'PLANKTON':
+            {
+                'data_dir': "",
+                'num_classes': 0,
+                'file_ending': ".",
+                'num_channels': 3,
+                'device': DEVICE
             }
         }
 
 learning_args = {'CIFAR10': 
-        {'n_epoch': 10, 
-        'transform': transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]), 
-        'loader_tr_args': {'batch_size': 64, 'num_workers': NUM_WORKERS},
-        'loader_te_args': {'batch_size': 1000, 'num_workers': NUM_WORKERS},
+        {
+            'n_epoch': 10, 
+            'transform': transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]), 
+            'loader_tr_args': {'batch_size': 64, 'num_workers': NUM_WORKERS},
+            'loader_te_args': {'batch_size': 1000, 'num_workers': NUM_WORKERS},
         }
+        'PLANKTON':
+        {
+            'n_epoch': 10, 
+            'transform': transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]), 
+            'loader_tr_args': {'batch_size': 64, 'num_workers': NUM_WORKERS},
+            'loader_te_args': {'batch_size': 1000, 'num_workers': NUM_WORKERS},         
+        }
+
     }
 
 
@@ -152,6 +171,6 @@ print(num_labeled_samples)
 print(type(strategy).__name__)
 print(f"Total run time: {datetime.now() - tic}")
 if len(acc) == len(num_labeled_samples):
-    plot_learning_curves(num_labeled_samples, acc, PLOT_DIR, config)
+    plot_learning_curves(num_labeled_samples, acc, config, STRATEGY)
 else:
     print("Acc is not same length as num labeled samples")
