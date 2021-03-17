@@ -93,7 +93,7 @@ class Strategy():
         :param: X_unlabeled: Unlabeled datapoints Y_unlabeled: Unlabeled labels
         '''
         handler = DataHandler(X_unlabeled, Y_unlabeled, transform)
-        loader = DataLoader(handler, shuffle=False, batch_size=args['batch_size'], num_workers=args['num_workers'])
+        loader = DataLoader(handler, shuffle=False, drop_last=True, batch_size=args['batch_size'], num_workers=args['num_workers'])
         return loader
 
     def get_embedding(self, dataloader, embedding_dim):
