@@ -3,8 +3,8 @@ import json
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--data_dir', default='/Users/martin.lund.haug/Documents/Masteroppgave/datasets/cifar10', help='Location of data set')
-parser.add_argument('--plot_dir', default='/Users/martin.lund.haug/Documents/Masteroppgave/core-set/plots', help='Dir for saving plot')
+parser.add_argument('--data_dir', default='../datasets/cifar10', help='Location of data set')
+parser.add_argument('--plot_dir', default='./plots', help='Dir for saving plot')
 parser.add_argument('--net', default='resnet18', help='Learning network')
 parser.add_argument('--strategy', default='coreset', help='AL strategy')
 parser.add_argument('--data_set', default='CIFAR10', help='Dataset')
