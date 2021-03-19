@@ -91,7 +91,7 @@ def compare_tsne():
 
     (X_tr, Y_tr), (X_te, Y_te) = cifar10.load_data()
 
-    num_classes = len(Y_te)
+    num_classes = 10
 
     X_te_tsne, Y_te_tsne = deepcopy(X_te), deepcopy(Y_te)
 
