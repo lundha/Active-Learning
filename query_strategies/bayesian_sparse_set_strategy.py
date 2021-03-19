@@ -21,7 +21,9 @@ class Bayesian_Sparse_Set_Strategy(Strategy):
         
     def query(self, num_query, n_pool):
         cs = ProjectedFrankWolfe(self.nl, self.ALD, self.num_projections, transform=self.args['transform'], **self.cs_kwargs)
+        print(len(num_query))
         batch = cs.build(num_query)
+        print(len(batch))
         return batch
 
     def load_nl(self):
@@ -118,6 +120,7 @@ class ProjectedFrankWolfe(object):
         self._init_build(M, **kwargs)
         w = to_gpu(torch.zeros([len(self.ELn), 1]))
         norm = lambda weights: (self.EL - (self.ELn.t() @ weights).squeeze()).norm()
+        print(M)
         for m in range(M):
             w = self._step(m, w)
 
