@@ -104,7 +104,7 @@ def plot_tsne_categories(data_x, data_y, tx, ty, queried_idxs, out_dir, args):
 
         mapped_y = map_list(data_y, queried_idxs[j])
         mapped_y = np.asarray(mapped_y)
-
+        print(f"Length mapped y: {mapped_y}")
         classes = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
         for i in range(len(classes)):
             # y_i is a vector that is true on corresponding indexes with data_y for each class in classes
@@ -117,17 +117,9 @@ def plot_tsne_categories(data_x, data_y, tx, ty, queried_idxs, out_dir, args):
         plt.scatter(tx[mapped_y], ty[mapped_y], marker="^", c='black')
         plt.gca().invert_yaxis()
 
-        try:
-            strat = strategy[j]
-        except Exception as e:
-            print(f"Exception strategy: {str(e)}")
-            strat = f"exception_{j}"
-        try:
-            len_q_idx = len(queried_idxs[j])
-        except Exception as e:
-            print(f"Exception len_q_idx: {str(e)}")
-            len_q_idx = 200
-
+        strat = strategy[j] 
+        len_q_idx = len(queried_idxs[j])
+        
         plt.savefig(os.path.join(out_dir, f"TSNE_{dataset}_q{len_q_idx}_{strat}_{seed}.eps"))
 
 def plots_tsne():

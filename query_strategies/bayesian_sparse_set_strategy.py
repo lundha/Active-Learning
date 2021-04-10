@@ -126,6 +126,7 @@ class ProjectedFrankWolfe(object):
             counter += 1
             w = self._step(m, w)
         print(f"Counter: {counter}")
+        print(f"Len w: {w}")
         # print(w[w.nonzero()[:, 0]].cpu().numpy())
         print('|| L-L(w)  ||: {:.4f}'.format(norm(w)))
         print('|| L-L(w1) ||: {:.4f}'.format(norm((w > 0).float())))

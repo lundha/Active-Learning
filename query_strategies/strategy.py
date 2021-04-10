@@ -86,6 +86,9 @@ class Strategy():
                 probs[idxs] = prob.cpu()
         return probs
 
+    def prepare_handler(self, X_unlabeled, Y_unlabeled, transform):
+        return DataHandler(X_unlabeled, Y_unlabeled, transform)
+
 
     def prepare_loader(self, X_unlabeled, Y_unlabeled, transform, args):
         '''

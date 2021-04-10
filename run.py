@@ -10,7 +10,7 @@ from utils.utils import load_data_pool, print_image, sub_sample_dataset, load_da
 from torch.utils.data import DataLoader
 from torchvision import transforms, utils
 from query_strategies import Coreset, Random_Strategy, Uncertainty_Strategy, Max_Entropy_Strategy, Bayesian_Sparse_Set_Strategy, \
-                            Strategy
+                            Strategy, DFAL, BUDAL
 from datetime import datetime
 from kcenter_greedy import KCenterGreedy
 from skimage import io, transform
@@ -54,7 +54,7 @@ load_data_args = {'CIFAR10':
                 'file_ending': ".png",
                 'num_channels': 3,
                 'device': DEVICE
-            }
+            },
             'PLANKTON':
             {
                 'data_dir': "",
@@ -68,10 +68,10 @@ load_data_args = {'CIFAR10':
 learning_args = {'CIFAR10': 
         {
             'n_epoch': 10, 
-            'transform': transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]), 
+            'transform': transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616))]), 
             'loader_tr_args': {'batch_size': 64, 'num_workers': NUM_WORKERS},
             'loader_te_args': {'batch_size': 1000, 'num_workers': NUM_WORKERS},
-        }
+        },
         'PLANKTON':
         {
             'n_epoch': 10, 
@@ -111,6 +111,10 @@ elif STRATEGY == 'max_entropy':
     strategy = Max_Entropy_Strategy(ALD, net, args)
 elif STRATEGY == 'bayesian_sparse_set':
     strategy = Bayesian_Sparse_Set_Strategy(ALD, net, args)
+elif STRATEGY == 'DFAL':
+    strategy = DFAL(ALD, net, args)
+elif STRATEYG == 'BUDAL':
+    strategy = BUDAL(ALD, net, args)
 else:
     strategy = Random_Strategy(ALD, net, args)
 

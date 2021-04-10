@@ -80,7 +80,7 @@ def compare_tsne():
         }
 
     tsne_args = {'dataset': 'CIFAR10',
-                'strategy': ['bayesian_sparse_set', 'coreset', 'uncertainty', 'max_entropy']
+                'strategy': ['bayesian_sparse_set'] #['bayesian_sparse_set', 'coreset', 'uncertainty', 'max_entropy']
             }
 
     data_args = load_data_args[DATA_SET]
@@ -88,6 +88,7 @@ def compare_tsne():
 
     HEADER_FILE = data_args['data_dir'] + "header.tfl.txt"
     FILENAME = data_args['data_dir'] + "image_set.data"
+    STRATEGIES = tsne_args['strategy']
 
     (X_tr, Y_tr), (X_te, Y_te) = cifar10.load_data()
 
@@ -143,14 +144,7 @@ def plot_tsne(x: list, y: list, queried_idxs: list, num_classes: int, tsne_args:
     
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
-    ######
-    try:
-        print(queried_idxs.shape)
-    except Exception as e:
-        print(queried_idxs)
-        print(str(e))
-        pass
-    ######
+  
     model = tsne_model(x=x, num_classes=num_classes, weight_path=weight_path)
     tx, ty = tsne_feature_extractor(model, x, out_dir)
     plot_tsne_categories(x, y, tx, ty, queried_idxs, out_dir, tsne_args)

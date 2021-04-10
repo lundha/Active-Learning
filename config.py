@@ -12,7 +12,7 @@ parser.add_argument('--num_init_labeled', default=0, type=int, help='number init
 parser.add_argument('--num_query', default=1000, type=int, help='Number of samples to query each round')
 parser.add_argument('--budget', default=10000, type=int, help='Budget for sample annotation')
 parser.add_argument('--num_workers', default=4, type=int, help='number of workers in torch')
-parser.add_argument('--fraction', default=1, type=int, help='fraction of samples to use')
+parser.add_argument('--fraction', default=1, type=float, help='fraction of samples to use')
 
 args = vars(parser.parse_args())
 
@@ -31,7 +31,7 @@ def update_config(args) -> None:
 
 
 def load_config() -> dict:
-
+    
     with open("config.json") as f:
         config = json.load(f)
     f.close()
