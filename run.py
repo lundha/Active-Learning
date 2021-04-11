@@ -139,14 +139,15 @@ acc.append(1.0 * (Y_te==P).sum().item() / len(Y_te))
 
 print(f"Testing accuracy {acc[rnd]}")
 
-
+'''
 print(f"Query indexes and plotting")
 queried_idxs = strategy.query(NUM_QUERY, n_pool)
 queried_idxs = np.asarray(queried_idxs)
 list_queried_idxs.append(queried_idxs)
 print(f"Num queried indexes: {len(queried_idxs)}")
-
-
+ALD.move_from_unlabeled_to_labeled(queried_idxs)
+'''
+init_tic = datetime.now()
 
 while len(ALD.index['labeled']) < BUDGET + NUM_INIT_LABELED:
 
@@ -158,22 +159,23 @@ while len(ALD.index['labeled']) < BUDGET + NUM_INIT_LABELED:
     NUM_QUERY = min(NUM_QUERY, NUM_INIT_LABELED + BUDGET - len(ALD.index['labeled']))
 
     queried_idxs = strategy.query(NUM_QUERY, n_pool)
-    print(f"Num queried indexes: {len(queried_idxs)}")
-    ALD.move_from_unlabeled_to_labeled(queried_idxs)
-
-    
+    #print(f"Queried idxs: {queried_idxs}")
+    #print(f"Num queried indexes: {len(queried_idxs)}")
+    ALD.on_value_move_from_unlabeled_to_labeled(queried_idxs)
+    #print(f"Labeled indexes: {ALD.index['labeled']}")
+    #print(f"Unlabeled indexes: {ALD.index['unlabeled']}")
     strategy.train()
     P = strategy.predict(X_te, Y_te)
     acc.append(1.0 * (Y_te==P).sum().item() / len(Y_te))
     num_labeled_samples.append(len(ALD.index['labeled']))
 
-    print(f"Round: {rnd}, Testing accuracy: {acc[rnd]}, Samples labeled: {num_labeled_samples[rnd]}, Pool size: {n_pool}, Iteration time: {datetime.now()-tic}")
+    print(f"Round: {rnd}, Testing accuracy: {acc[rnd]}, Samples labeled: {num_labeled_samples[rnd]}, Pool size: {len(ALD.index['unlabeled'])}, Iteration time: {datetime.now()-tic}")
 
     
 print(acc)
 print(num_labeled_samples)
 print(type(strategy).__name__)
-print(f"Total run time: {datetime.now() - tic}")
+print(f"Total run time: {datetime.now() - init_tic}")
 if len(acc) == len(num_labeled_samples):
     plot_learning_curves(num_labeled_samples, acc, config, STRATEGY)
 else:

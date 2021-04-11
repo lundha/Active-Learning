@@ -17,34 +17,27 @@ class DFAL(Strategy):
 
 
         self.classifier.cpu()
-        #self.classifier.cuda()
-        self.classifier.cpu()
         
         self.classifier.eval()
+        print(f"Shape unlabaled samples: {idx_ulb.shape}")
         dis = np.zeros(idx_ulb.shape)
 
         handler = self.prepare_handler(self.ALD.X[idx_ulb], self.ALD.Y[idx_ulb], self.args['transform'])
-        '''
-        for i in range(len(idx_ulb)):
-            if i % 100 == 0:
-                print('adv {}/{}'.format(i, len(idx_ulb)))
-            x, y, idx = loader[i]
-            dis[i] = self.cal_dis(x)
-        '''
-        counter = 0
+
         for i in range(len(idx_ulb)):
             if i % 100 == 0:
                 print('adv {}/{}'.format(i, len(idx_ulb)))
             x, y, idx = handler[i]
             dis[i] = self.cal_dis(x)
 
-        #self.classifier.cuda()
+        self.classifier.cuda()
 
-        return idx_ulb[dis.argsort()[:n]]        
+        # argsort() returns the indices that would sort an array. Since the index of the dis() and element i in 
+        # idx_ulb have 1-to-1 correspondence, it implicitly returns the idx of the unlabeled sample.
+        return idx_ulb[dis.argsort()[:num_query]]        
 
     def cal_dis(self, x):
-        print(x.shape)
-        print(type(x))
+
         nx = torch.unsqueeze(x, 0)
         nx.requires_grad_()
         eta = torch.zeros(nx.shape)

@@ -15,10 +15,10 @@ parser.add_argument("--format", default="eps", help="File format, e.g png, pdf")
 
 def plot_learning_curves(data_x, data_y, config, STRATEGY, title="Learning curve", x_label="Num samples", y_label="Accuracy"):
     '''
-    Plot result of AL/ML
-    :params data_x: Number of samples/Percentage samples
-    :params data_y: Accuracy
-    :params plot_dir: Dir for saving plot
+    Plot result of AL/ML,
+    param data_x: Number of samples/Percentage samples,
+    param data_y: Accuracy,
+    param plot_dir: Dir for saving plot,
     '''
     plt.figure("Learning curves")
     plt.plot(data_x, data_y)
