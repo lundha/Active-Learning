@@ -5,19 +5,18 @@ from .strategy import Strategy
 import pickle
 import torch
 
-
 class BUDAL(Strategy):
     def __init__(self, ALD, net, args,tor=1e-4):
         super().__init__(ALD, net, args)
+    
         self.args = args
         self.ALD = ALD
-        self.net = net
         self.blending_constant = 1
         self.embedding_dim = net.get_embedding_dim()
         self.already_selected = []
         self.tor = tor
         self.max_iter = 50
-        
+ 
     def query(self, num_query, n_pool):
 
         # Deep Fool on n_pool
@@ -33,7 +32,7 @@ class BUDAL(Strategy):
         return budal_samples
         # Use core set to find num_query clusters from list * blending constant (0.0 - 1.0)
         # Return samples
-
+    
     def diverse_query(self, num_query, samples):
         #idx_ulb = self.ALD.index['unlabeled']
 
@@ -44,7 +43,7 @@ class BUDAL(Strategy):
         #opt_idx = self.find_optimal_solution(dist_mat, min_dist, num_query, n_pool)
         opt_idx = greedy_idx   
         return opt_idx
-        
+    
     def uncertain_query(self):
         
         idx_ulb = self.ALD.index['unlabeled']
@@ -71,13 +70,13 @@ class BUDAL(Strategy):
         
     # Find greedy solution
     def find_greedy_solution(self, dist_mat, num_query):
+        
         kcg = KCenterGreedy(dist_mat)
         idx = kcg.select_batch(self.already_selected, num_query)
         return idx, kcg.min_distances
-
-
+        
     def cal_dis(self, x):
-
+        
         nx = torch.unsqueeze(x, 0)
         nx.requires_grad_()
         eta = torch.zeros(nx.shape)
@@ -115,8 +114,5 @@ class BUDAL(Strategy):
             out = self.classifier(nx+eta)
             py = out.max(1)[1].item()
             i_iter += 1
-
-        return (eta*eta).sum()
-
-
-
+        
+        return (eta*eta).sum()     

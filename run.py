@@ -121,8 +121,7 @@ else:
 # Number of unlabeled samples (pool)
 n_pool = len(ALD.index['unlabeled'])
 print(type(strategy).__name__)
-print(f"Shape of training data: {ALD.index['unlabeled'].shape}, Data type: {ALD.index['unlabeled'].dtype}")
-print(f"Number of training samples: {n_pool}, Number of testing samples: {len(Y_te)}")
+print(f"Number of training samples: {n_pool}, Number initially labeled: {len(ALD.index['labeled'])}, Number of testing samples: {len(Y_te)}")
 
 
 # Round 0 accuracy
