@@ -47,13 +47,31 @@ class ActiveLearningDataset:
         if not isinstance(idxs_unlabeled, list):
             idxs_unlabeled = list(idxs_unlabeled)
 
+        print(f"Idx before mapping: {idxs_unlabeled}")
         idx = self.index['unlabeled'][idxs_unlabeled]
+        
         if not isinstance(idx, list):
             idx = list(idx)
 
+
         self.index['unlabeled'] = np.delete(self.index['unlabeled'], idxs_unlabeled, axis=0)
-        self.index['labeled'] = np.append(self.index['labeled'], idx, axis=0)
-        return self.X[idx], self.Y[idx]  
+        self.index['labeled'] = np.append(self.index['labeled'], idxs_unlabeled, axis=0)
+        #return self.X[idx], self.Y[idx]  
+
+    def on_value_move_from_unlabeled_to_labeled(self, idxs_unlabeled):
+        '''
+        Maps local index of unlabeled data point to global index w.r.t X, and moves index from unlabeled to train
+        :param: idxs to be moved
+        :return: Data point(s) and label(s) of the data corresponding to the moved index/indices.
+        '''
+
+        if not isinstance(idxs_unlabeled, list):
+            idxs_unlabeled = list(idxs_unlabeled)
+
+        self.index['unlabeled'] = self.index['unlabeled'][ ~np.isin(self.index['unlabeled'], idxs_unlabeled)]
+        self.index['labeled'] = np.append(self.index['labeled'], idxs_unlabeled, axis=0)
+        #return self.X[idx], self.Y[idx]  
+
     
 
 if __name__ == "__main__":
