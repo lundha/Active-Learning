@@ -1,1 +1,12 @@
-{"DATA_DIR": "../datasets/cifar10", "PLOT_DIR": "./plots", "NET": "resnet18", "STRATEGY": "DFAL", "DATA_SET": "CIFAR10", "NUM_INIT_LABELED": 0, "NUM_QUERY": 10, "BUDGET": 100, "NUM_WORKERS": 0, "FRACTION": 0.01}
+{
+    "DATA_DIR": "../datasets/cifar10",
+    "PLOT_DIR": "./plots",
+    "NET": "resnet18",
+    "STRATEGY": "BUDAL",
+    "DATA_SET": "CIFAR10",
+    "NUM_INIT_LABELED": 500,
+    "NUM_QUERY": 500,
+    "BUDGET": 4000,
+    "NUM_WORKERS": 4,
+    "FRACTION": 0.1
+}

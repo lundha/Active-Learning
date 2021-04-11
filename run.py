@@ -113,7 +113,7 @@ elif STRATEGY == 'bayesian_sparse_set':
     strategy = Bayesian_Sparse_Set_Strategy(ALD, net, args)
 elif STRATEGY == 'DFAL':
     strategy = DFAL(ALD, net, args)
-elif STRATEYG == 'BUDAL':
+elif STRATEGY == 'BUDAL':
     strategy = BUDAL(ALD, net, args)
 else:
     strategy = Random_Strategy(ALD, net, args)
@@ -161,7 +161,8 @@ while len(ALD.index['labeled']) < BUDGET + NUM_INIT_LABELED:
     queried_idxs = strategy.query(NUM_QUERY, n_pool)
     #print(f"Queried idxs: {queried_idxs}")
     #print(f"Num queried indexes: {len(queried_idxs)}")
-    ALD.on_value_move_from_unlabeled_to_labeled(queried_idxs)
+    #ALD.on_value_move_from_unlabeled_to_labeled(queried_idxs)
+    ALD.move_from_unlabeled_to_labeled(queried_idxs)
     #print(f"Labeled indexes: {ALD.index['labeled']}")
     #print(f"Unlabeled indexes: {ALD.index['unlabeled']}")
     strategy.train()
