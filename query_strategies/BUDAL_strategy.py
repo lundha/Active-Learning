@@ -22,13 +22,13 @@ class BUDAL(Strategy):
         # Deep Fool on n_pool
         # Return sorted list from most uncertain to least uncertain
         uncertain_samples = self.uncertain_query()
-
+        print(f"Uncertain samples: {uncertain_samples}")
         blended_uncertain_list = uncertain_samples[0:int(len(uncertain_samples) * self.blending_constant)]
         
         # 0.9 is the blending delta
         self.blending_constant = self.blending_constant*0.9
         budal_samples = self.diverse_query(num_query, blended_uncertain_list)
-
+        print(f"Budal samples: {budal_samples}")
         return budal_samples
         # Use core set to find num_query clusters from list * blending constant (0.0 - 1.0)
         # Return samples

@@ -11,7 +11,7 @@ from utils.utils import load_data_pool, print_image, sub_sample_dataset, load_da
 from torch.utils.data import DataLoader
 from torchvision import transforms, utils
 from query_strategies import Coreset, Random_Strategy, Uncertainty_Strategy, Max_Entropy_Strategy, Bayesian_Sparse_Set_Strategy, \
-                            Strategy
+                            Strategy, DFAL, BUDAL
 from datetime import datetime
 from kcenter_greedy import KCenterGreedy
 from skimage import io, transform
@@ -35,9 +35,9 @@ def compare_tsne():
     DATA_SET = config['DATA_SET']
     NET = config['NET']
     STRATEGY = config['STRATEGY']
-    NUM_QUERY = config['NUM_QUERY']
+    NUM_QUERY = 200  #config['NUM_QUERY']
     NUM_WORKERS = config['NUM_WORKERS']
-    NUM_INIT_LABELED = config['NUM_INIT_LABELED']
+    NUM_INIT_LABELED = 0 #config['NUM_INIT_LABELED']
     STRATEGIES = ['bayesian_sparse_set', 'coreset', 'uncertainty', 'max_entropy']
     DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -97,39 +97,43 @@ def compare_tsne():
     X_te_tsne, Y_te_tsne = deepcopy(X_te), deepcopy(Y_te)
 
     # Generate initially labeled pool 
-    ALD = ActiveLearningDataset(X_tr, Y_tr, NUM_INIT_LABELED)
+    ALD = ActiveLearningDataset(X_te, Y_te, NUM_INIT_LABELED)
 
     # Load network 
     net = get_net(NET, data_args)
 
     list_queried_idxs = []
 
-    for STRATEGY in STRATEGIES:
-        tic = datetime.now()
+    tic = datetime.now()
 
-        if STRATEGY == 'coreset':
-            strategy = Coreset(ALD, net, args)
-        elif STRATEGY == 'uncertainty':
-            strategy = Uncertainty_Strategy(ALD, net, args)
-        elif STRATEGY == 'max_entropy':
-            strategy = Max_Entropy_Strategy(ALD, net, args)
-        elif STRATEGY == 'bayesian_sparse_set':
-            strategy = Bayesian_Sparse_Set_Strategy(ALD, net, args)
-        else:
-            strategy = Random_Strategy(ALD, net, args)
+    if STRATEGY == 'coreset':
+        strategy = Coreset(ALD, net, args)
+    elif STRATEGY == 'uncertainty':
+        strategy = Uncertainty_Strategy(ALD, net, args)
+    elif STRATEGY == 'max_entropy':
+        strategy = Max_Entropy_Strategy(ALD, net, args)
+    elif STRATEGY == 'bayesian_sparse_set':
+        strategy = Bayesian_Sparse_Set_Strategy(ALD, net, args)
+    elif STRATEGY == 'DFAL':
+        strategy = DFAL(ALD, net, args)
+    elif STRATEGY == 'BUDAL':
+        strategy = BUDAL(ALD, net, args)
+    else:
+        strategy = Random_Strategy(ALD, net, args)
 
-        # Number of unlabeled samples (pool)
-        n_pool = len(ALD.index['unlabeled'])
-        print(type(strategy).__name__)
+    # Number of unlabeled samples (pool)
+    n_pool = len(ALD.index['unlabeled'])
+    print(type(strategy).__name__)
+    tsne_args['strategy'] = type(strategy).__name__
+    print(tsne_args['strategy'])
+    print(f"Query indexes and plotting")
+    queried_idxs = strategy.query(NUM_QUERY, n_pool)
+    queried_idxs = np.asarray(queried_idxs)
+    list_queried_idxs.append(queried_idxs)
+    print(f"Num queried indexes: {len(queried_idxs)}")
 
-        print(f"Query indexes and plotting")
-        queried_idxs = strategy.query(NUM_QUERY, n_pool)
-        queried_idxs = np.asarray(queried_idxs)
-        list_queried_idxs.append(queried_idxs)
-        print(f"Num queried indexes: {len(queried_idxs)}")
-
-        plot_tsne(X_te_tsne, Y_te_tsne, list_queried_idxs, num_classes, tsne_args)
-        print(f"Total run time: {datetime.now()-tic}")
+    plot_tsne(X_te_tsne, Y_te_tsne, list_queried_idxs, num_classes, tsne_args)
+    print(f"Total run time: {datetime.now()-tic}")
 
 
 
