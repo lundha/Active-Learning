@@ -3,7 +3,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import argparse
-
+from random import randint
 from dataloader import Resize, Normalize, ToTensor, Convert2RGB, DataHandler
 from autoencoder import Autoencoder
 from utils.utils import load_data_pool, print_image, sub_sample_dataset, load_data
@@ -30,7 +30,6 @@ DATA_DIR = config['DATA_DIR']
 PLOT_DIR = config['PLOT_DIR']
 HEADER_FILE = DATA_DIR + "header.tfl.txt"
 FILENAME = DATA_DIR + "image_set.data"
-
 DATA_SET = config['DATA_SET']
 NET = config['NET']
 STRATEGY = config['STRATEGY']
@@ -44,8 +43,11 @@ DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 parser = argparse.ArgumentParser()
 parser.add_argument('--strategy', default=STRATEGY, type=str, help='Choose different strategy than specified in config')
 args = parser.parse_args()
-
+SEED = randint(1,100)
 STRATEGY = args.strategy
+
+LOG_FILE = f"./LOGS/{DATA_SET}_{STRATEGY}_q{NUM_QUERY}_f{FRACTION}.log"
+
 
 load_data_args = {'CIFAR10':
             {
@@ -124,7 +126,18 @@ print(type(strategy).__name__)
 print(f"Number of training samples: {n_pool}, Number initially labeled: {len(ALD.index['labeled'])}, Number of testing samples: {len(Y_te)}")
 
 
+##### LOGGING 
+fh = open(LOG_FILE, 'a+')
+fh.write('\n ***** NEW AL SESSION ***** \n')
+fh.write('*** INFO ***\n')
+fh.write(f'Strategy: {type(strategy).__name__}, Dataset: {DATA_SET}, Number of training samples: {n_pool}, Number initially labeled samples: {len(ALD.index["labeled"])}'
+        f'Number of testing samples: {len(Y_te)}, Learning network: {NET}, Num query: {NUM_QUERY}, Budget: {BUDGET}, SEED: {SEED}\n')
+fh.write(f'Num epochs: {args["n_epoch"]}, Training batch size: {args["loader_tr_args"]["batch_size"]}, Testing batch size: {args["loader_te_args"]["batch_size"]}\n')
+fh.write('--'*10)
+fh.close()
+
 # Round 0 accuracy
+init_tic = datetime.now()
 rnd = 0
 print(f"Round: {rnd}")
 
@@ -138,45 +151,54 @@ acc.append(1.0 * (Y_te==P).sum().item() / len(Y_te))
 
 print(f"Testing accuracy {acc[rnd]}")
 
-'''
-print(f"Query indexes and plotting")
-queried_idxs = strategy.query(NUM_QUERY, n_pool)
-queried_idxs = np.asarray(queried_idxs)
-list_queried_idxs.append(queried_idxs)
-print(f"Num queried indexes: {len(queried_idxs)}")
-ALD.move_from_unlabeled_to_labeled(queried_idxs)
-'''
-init_tic = datetime.now()
+##### LOGGING #####
+fh = open(LOG_FILE, 'a+')
+fh.write(f'\nRound: {rnd}, Testing accuracy: {acc[rnd]}, Number of labeled samples: {len(ALD.index["labeled"])}/{n_pool}, Iteration time: {datetime.now() - init_tic}\n')
+fh.close()
+###################
 
 while len(ALD.index['labeled']) < BUDGET + NUM_INIT_LABELED:
 
     tic = datetime.now()
 
     rnd += 1
-    n_pool = len(ALD.index['unlabeled'])
+    n_pool_2 = len(ALD.index['unlabeled'])
 
     NUM_QUERY = min(NUM_QUERY, NUM_INIT_LABELED + BUDGET - len(ALD.index['labeled']))
 
-    queried_idxs = strategy.query(NUM_QUERY, n_pool)
-    #print(f"Queried idxs: {queried_idxs}")
-    #print(f"Num queried indexes: {len(queried_idxs)}")
-    #ALD.on_value_move_from_unlabeled_to_labeled(queried_idxs)
-    ALD.move_from_unlabeled_to_labeled(queried_idxs)
-    #print(f"Labeled indexes: {ALD.index['labeled']}")
-    #print(f"Unlabeled indexes: {ALD.index['unlabeled']}")
+    queried_idxs = strategy.query(NUM_QUERY, n_pool_2)
+
+    if type(strategy).__name__ == 'DFAL':
+        ALD.on_value_move_from_unlabeled_to_labeled(queried_idxs)
+    else: 
+        ALD.move_from_unlabeled_to_labeled(queried_idxs)
+
     strategy.train()
     P = strategy.predict(X_te, Y_te)
     acc.append(1.0 * (Y_te==P).sum().item() / len(Y_te))
     num_labeled_samples.append(len(ALD.index['labeled']))
 
-    print(f"Round: {rnd}, Testing accuracy: {acc[rnd]}, Samples labeled: {num_labeled_samples[rnd]}, Pool size: {len(ALD.index['unlabeled'])}, Iteration time: {datetime.now()-tic}")
+    print(f"Round: {rnd}, Testing accuracy: {acc[rnd]}, Samples labeled: {num_labeled_samples[rnd]}, Pool size: {len(ALD.index['unlabeled'])}, Iteration time: {datetime.now()-tic}\n")
 
+    ##### LOGGING #####
+    fh = open(LOG_FILE, 'a+')
+    fh.write(f'Round: {rnd}, Testing accuracy: {acc[rnd]}, Number of labeled samples: {len(ALD.index["labeled"])}/{n_pool}, Iteration time: {datetime.now() - tic}\n')
+    fh.close()
+    ###################
     
 print(acc)
 print(num_labeled_samples)
 print(type(strategy).__name__)
 print(f"Total run time: {datetime.now() - init_tic}")
+
+##### LOGGING #####
+fh = open(LOG_FILE, 'a+')
+fh.write(f'\n **** FINISHED RUNNING **** \n')
+fh.write(f'Testing accuracy: {acc}, Number of labeled samples: {num_labeled_samples}, Strategy: {type(strategy).__name__}, Dataset: {DATA_SET}, Total iteration time: {datetime.now() - init_tic}\n')
+fh.close()
+###################
+
 if len(acc) == len(num_labeled_samples):
-    plot_learning_curves(num_labeled_samples, acc, config, STRATEGY)
+    plot_learning_curves(num_labeled_samples, acc, config, STRATEGY, SEED)
 else:
     print("Acc is not same length as num labeled samples")
