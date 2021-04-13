@@ -3,6 +3,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import argparse
+import sys
 from random import randint
 from dataloader import Resize, Normalize, ToTensor, Convert2RGB, DataHandler
 from autoencoder import Autoencoder
@@ -90,8 +91,8 @@ args = learning_args[DATA_SET]
 
 
 X_tr, Y_tr, X_te, Y_te = get_dataset(DATA_SET, Fraction=FRACTION)
-(X_tr_keras, Y_tr_keras), (X_te_keras, Y_te_keras) = cifar10.load_data()
 
+(X_tr_keras, Y_tr_keras), (X_te_keras, Y_te_keras) = cifar10.load_data()
 Y_tr_keras, Y_te_keras = torch.from_numpy(np.array(Y_tr_keras)), torch.from_numpy(np.array(Y_te_keras))
 Y_tr_keras, Y_te_keras = torch.squeeze(Y_tr_keras), torch.squeeze(Y_tr_keras)
 
@@ -117,8 +118,10 @@ elif STRATEGY == 'DFAL':
     strategy = DFAL(ALD, net, args)
 elif STRATEGY == 'BUDAL':
     strategy = BUDAL(ALD, net, args)
-else:
+elif STRATEGY == 'random':
     strategy = Random_Strategy(ALD, net, args)
+else: 
+    sys.exit("A valid strategy is not specified, terminating execution..")
 
 # Number of unlabeled samples (pool)
 n_pool = len(ALD.index['unlabeled'])
@@ -128,9 +131,9 @@ print(f"Number of training samples: {n_pool}, Number initially labeled: {len(ALD
 
 ##### LOGGING 
 fh = open(LOG_FILE, 'a+')
-fh.write('\n ***** NEW AL SESSION ***** \n')
+fh.write('\n \t\t ***** NEW AL SESSION ***** \n')
 fh.write('*** INFO ***\n')
-fh.write(f'Strategy: {type(strategy).__name__}, Dataset: {DATA_SET}, Number of training samples: {n_pool}, Number initially labeled samples: {len(ALD.index["labeled"])}'
+fh.write(f'Strategy: {type(strategy).__name__}, Dataset: {DATA_SET}, Number of training samples: {n_pool}, Number initially labeled samples: {len(ALD.index["labeled"])}\n'
         f'Number of testing samples: {len(Y_te)}, Learning network: {NET}, Num query: {NUM_QUERY}, Budget: {BUDGET}, SEED: {SEED}\n')
 fh.write(f'Num epochs: {args["n_epoch"]}, Training batch size: {args["loader_tr_args"]["batch_size"]}, Testing batch size: {args["loader_te_args"]["batch_size"]}\n')
 fh.write('--'*10)
@@ -168,7 +171,8 @@ while len(ALD.index['labeled']) < BUDGET + NUM_INIT_LABELED:
 
     queried_idxs = strategy.query(NUM_QUERY, n_pool_2)
 
-    if type(strategy).__name__ == 'DFAL':
+    if (type(strategy).__name__ == 'DFAL' or type(strategy).__name__ == 'Random_Strategy' or type(strategy).__name__ == 'Uncertainty_Strategy' \
+        or type(strategy).__name__ == 'Max_Entropy_Strategy'):
         ALD.on_value_move_from_unlabeled_to_labeled(queried_idxs)
     else: 
         ALD.move_from_unlabeled_to_labeled(queried_idxs)
@@ -193,7 +197,7 @@ print(f"Total run time: {datetime.now() - init_tic}")
 
 ##### LOGGING #####
 fh = open(LOG_FILE, 'a+')
-fh.write(f'\n **** FINISHED RUNNING **** \n')
+fh.write(f'\n \t\t **** FINISHED RUNNING **** \n')
 fh.write(f'Testing accuracy: {acc}, Number of labeled samples: {num_labeled_samples}, Strategy: {type(strategy).__name__}, Dataset: {DATA_SET}, Total iteration time: {datetime.now() - init_tic}\n')
 fh.close()
 ###################
