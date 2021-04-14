@@ -17,7 +17,7 @@ class BUDAL(Strategy):
         self.tor = tor
         self.max_iter = 50
  
-    def query(self, num_query, n_pool):
+    def query(self, num_query):
 
         # Deep Fool on n_pool
         # Return sorted list from most uncertain to least uncertain
@@ -59,6 +59,7 @@ class BUDAL(Strategy):
         for i in range(len(idx_ulb)):
             if i % 100 == 0:
                 print('adv {}/{}'.format(i, len(idx_ulb)))
+            print(i)
             x, _, _ = handler[i]
             dis[i] = self.cal_dis(x)
 
@@ -66,7 +67,7 @@ class BUDAL(Strategy):
 
         # argsort() returns the indices that would sort an array. Since the index of the dis() and element i in 
         # idx_ulb have 1-to-1 correspondence, it implicitly returns the idx of the unlabeled sample.
-        return idx_ulb[dis.argsort()]        
+        return idx_ulb[dis.argsort()]               
         
     # Find greedy solution
     def find_greedy_solution(self, dist_mat, num_query):

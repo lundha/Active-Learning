@@ -14,7 +14,7 @@ class Coreset(Strategy):
         self.already_selected = []
         self.embedding_dim = net.get_embedding_dim()
 
-    def query(self, num_query, n_pool):
+    def query(self, num_query):
 
         idx_ulb = self.ALD.index['unlabeled']
         loader = self.prepare_loader(self.ALD.X[idx_ulb], self.ALD.Y[idx_ulb], self.args['transform'], self.args['loader_tr_args'])

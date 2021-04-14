@@ -11,7 +11,7 @@ class DFAL(Strategy):
         self.ALD = ALD
         self.max_iter = 50
         
-    def query(self, num_query, n_pool):
+    def query(self, num_query):
 
         idx_ulb = self.ALD.index['unlabeled']
 

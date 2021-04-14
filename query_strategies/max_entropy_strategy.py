@@ -7,7 +7,7 @@ class Max_Entropy_Strategy(Strategy):
         super().__init__(ALD, net, args)
         self.ALD = ALD 
 
-    def query(self, num_query, n_pool):    
+    def query(self, num_query):    
         idx_ulb = self.ALD.index['unlabeled']
         X, Y = self.ALD.X[idx_ulb], self.ALD.Y[idx_ulb]
         probs = self.predict_prob(X,Y)
