@@ -27,7 +27,8 @@ class DataSet:
                 transform = None,
                 file_ending = ".png",
                 num_classes = 10,
-                train = False):
+                train = False,
+                img_dim = 32):
     
         self.data_dir = data_dir
         self.header_file = header_file
@@ -37,9 +38,10 @@ class DataSet:
         self.classlist = None
         self.train = train
         self.file_ending = file_ending
+        
         self.load_data()
-        self.images, self.labels = self.convertToNumpy()
-        self.save_data(dir=data_dir, train=train)
+        self.images, self.labels = self.load_images_and_labels(img_dim)
+        self.save_data(dir=data_dir)
 
     def __repr__(self):
         return f"Number of datapoints: {str(len(self.dataset))}, \n Root location: {self.data_dir}, Transform: {self.transform} \nTrain: {self.train}"
@@ -63,19 +65,61 @@ class DataSet:
             image = io.imread(img_name, pilmode='RGBA')
         else:
             image = io.imread(img_name)
+
         label = self.dataset.iloc[idx, 0].split(' ')[1]
         sample = {'image': image, 'label': label}
 
+        if self.transform:
+            sample = self.transform(sample)
+
         return sample
         
-    def save_data(self, dir, train):
+    def load_images_and_labels(self, img_dim):
+        
+        images = []
+        labels = []
+        DIM = img_dim
 
-        if train:
-            np.save(f'{dir}/train_data.npy', self.images)
-            np.save(f'{dir}/train_labels.npy', self.labels)    
-        else:
-            np.save(f'{dir}/test_data.npy', self.images)
-            np.save(f'{dir}/test_labels.npy', self.labels)
+        try:
+            for idx in range(len(self.dataset)):
+
+                img_name = self.dataset.iloc[idx, 0].split(' ')[0]
+                label = self.dataset.iloc[idx, 0].split(' ')[1]
+
+                img = Image.open(img_name)
+                img = img.convert('RGB')
+         
+                if idx % 1000 == 0:
+                    print(idx)
+
+                img = np.asarray(img)
+                img = cv2.resize(img, dsize=(DIM, DIM), interpolation=cv2.INTER_CUBIC)
+                img = img.transpose(2,0,1)
+     
+                images.append(img)
+                labels.append(label)
+                            
+            images = np.asarray(images)
+            labels = np.asarray(labels, dtype="int64")
+            images = images.reshape(-1, 3, DIM, DIM)
+            images = images.transpose(0, 2, 3, 1)  # convert to HWC
+
+
+        except Exception as e:
+            print(str(e))
+
+        return images, labels
+
+
+    def split_into_train_test(self):
+        pass
+
+    def save_data(self, dir):
+        
+        np.save(f'{dir}/data.npy', self.images)    
+        np.save(f'{dir}/labels.npy', self.labels)    
+
+  
 
     def load_data(self):
         if os.path.isfile(os.path.join(self.data_dir, self.header_file)):
@@ -99,12 +143,15 @@ class DataSet:
             if self.file_ending == ".png":
                 image = io.imread(img_name, pilmode='RGB')
                 image = np.array(image)
+            elif self.file_ending == ".jpg":
+                image = io.imread(img_name)
+                image = np.array(image)
             label = self.dataset.iloc[idx, 0].split(' ')[1]
             self.images.append(image)
             self.labels.append(int(label))
         
-        self.images = np.array(self.images)
-        self.labels = np.array(self.labels)
+        self.images = np.array(self.images, dtype=object)
+        self.labels = np.array(self.labels, dtype=object)
         sample = {'images': self.images, 'labels': self.labels}
         
         return self.images, self.labels
@@ -258,7 +305,9 @@ class DataHandler(Dataset):
     def __getitem__(self, index):
         x, y = self.X[index], self.Y[index]
         if self.transform is not None:
-            x = Image.fromarray(x)
+            x = Image.fromarray(x.astype(np.uint8))
+            #x = Image.fromarray((x * 255).astype(np.uint8)) # Added to fix some bug, consider removing
+
             x = self.transform(x)
         return x, y, index
 
