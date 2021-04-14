@@ -15,11 +15,12 @@ from datetime import datetime
 
 class Autoencoder(nn.Module):
 
-    def __init__(self, embedding_dim):
+    def __init__(self, embedding_dim, img_dim):
         super(Autoencoder, self).__init__()
-        self.conv1 = nn.Conv2d(3, 32, kernel_size=5)
-        self.conv2 = nn.Conv2d(32, 32, kernel_size=5)
-        self.conv3 = nn.Conv2d(32, 64, kernel_size=5)
+        dim = img_dim
+        self.conv1 = nn.Conv2d(3, dim, kernel_size=5)
+        self.conv2 = nn.Conv2d(dim, dim, kernel_size=5)
+        self.conv3 = nn.Conv2d(dim, 2*dim, kernel_size=5)
         self.fc1 = nn.Linear(1024, embedding_dim)
         self.fc2 = nn.Linear(embedding_dim, 10)
 
