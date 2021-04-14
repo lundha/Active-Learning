@@ -19,7 +19,7 @@ class Strategy():
         self.device = torch.device("cuda" if use_cuda else "cpu")
         self.classifier = self.net.to(self.device)
 
-    def query(self, n_query):
+    def query(self):
         pass
 
     def update(self, idxs_lb):
@@ -29,6 +29,10 @@ class Strategy():
 
         for batch_idx, (x,y,idx) in enumerate(loader_tr):
             #y = (torch.max(y,1)[0]).type(torch.LongTensor)
+
+            ### AD HOC
+            y = y.type(torch.LongTensor)
+
             x,y = x.to(self.device), y.to(self.device)
             optimizer.zero_grad()
             out = self.classifier(x)
@@ -56,6 +60,8 @@ class Strategy():
     def predict(self, Xte, Yte):
         loader_te = self.prepare_loader(Xte, Yte, self.args['transform'], self.args['loader_te_args'])
         self.classifier.eval()
+        Yte = Yte.type(torch.LongTensor)
+
         try:
             P = torch.zeros(len(Yte), dtype=Yte.dtype)
         except Exception as e:
@@ -104,15 +110,14 @@ class Strategy():
         Create and save embedding 
         :param: dataloader:dataloader, embedding_din:embedding dimension 
         '''
-        encoder = Autoencoder(embedding_dim)
-
+        encoder = Autoencoder(embedding_dim, self.args['img_dim'])
+        data_set = self.args['data_set']
         embedding = torch.zeros([len(dataloader.dataset), embedding_dim])
-        
         with torch.no_grad():
             for x, y, idxs in dataloader:
                 out, e1 = encoder(x)
                 embedding[idxs] = e1.cpu()
-        np.save('./CIFAR10/embedding.npy', embedding)
+        np.save(f'./{data_set}_EMBEDDING.npy', embedding)
         embedding = embedding.numpy()
         return embedding
 
@@ -121,6 +126,7 @@ class Strategy():
         '''
         Calculate and save distance matrix, input is embedding
         '''
+        data_set = self.args['data_set']
         t_start = datetime.now()
         dist_mat = np.matmul(embedding, embedding.transpose())
         sq = np.array(dist_mat.diagonal()).reshape(len(embedding), 1)
@@ -128,6 +134,6 @@ class Strategy():
         dist_mat += sq
         dist_mat += sq.transpose()
         dist_mat = np.sqrt(dist_mat)
-        np.save('./CIFAR10/distance_matrix.npy', dist_mat)
+        np.save(f'./{data_set}_DIST_MATRIX.npy', dist_mat)
         print(f"Time taken to generate distance matrix: {datetime.now() - t_start}")
         return dist_mat
