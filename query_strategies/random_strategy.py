@@ -8,7 +8,7 @@ class Random_Strategy(Strategy):
         super().__init__(ALD, net, args)
         self.ALD = ALD
 
-    def query(self, num_query, n_pool):
+    def query(self, num_query):
         idx_ulb = self.ALD.index['unlabeled']
         query = np.random.choice(idx_ulb, num_query, replace=False)
         return query
