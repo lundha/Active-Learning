@@ -58,11 +58,12 @@ load_data_args = {'CIFAR10':
                 'num_channels': 3,
                 'device': DEVICE
             },
-            'PLANKTON':
+            'PLANKTON10':
             {
-                'data_dir': "",
-                'num_classes': 0,
-                'file_ending': ".",
+                'data_dir': "/home/martlh/masteroppgave/datasets/train10",
+                'img_dim': 32, 
+                'num_classes': 10,
+                'file_ending': ".jpg",
                 'num_channels': 3,
                 'device': DEVICE
             }
@@ -70,14 +71,18 @@ load_data_args = {'CIFAR10':
 
 learning_args = {'CIFAR10': 
         {
-            'n_epoch': 10, 
+            'data_set': 'CIFAR10',
+            'n_epoch': 10,
+            'img_dim': 32,  
             'transform': transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616))]), 
-            'loader_tr_args': {'batch_size': 64, 'num_workers': NUM_WORKERS},
+            'loader_tr_args': {'batch_size': 32, 'num_workers': NUM_WORKERS},
             'loader_te_args': {'batch_size': 1000, 'num_workers': NUM_WORKERS},
         },
-        'PLANKTON':
+        'PLANKTON10':
         {
-            'n_epoch': 10, 
+            'data_set': 'PLANKTON10',
+            'n_epoch': 10,
+            'img_dim': 32,
             'transform': transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]), 
             'loader_tr_args': {'batch_size': 64, 'num_workers': NUM_WORKERS},
             'loader_te_args': {'batch_size': 1000, 'num_workers': NUM_WORKERS},         
@@ -86,40 +91,47 @@ learning_args = {'CIFAR10':
     }
 
 
-data_args = load_data_args[DATA_SET]
-args = learning_args[DATA_SET]
+load_data_args = load_data_args[DATA_SET]
+learning_args = learning_args[DATA_SET]
 
 
-X_tr, Y_tr, X_te, Y_te = get_dataset(DATA_SET, Fraction=FRACTION)
+X_tr, Y_tr, X_te, Y_te = get_dataset(DATA_SET, load_data_args, Fraction=FRACTION)
 
-(X_tr_keras, Y_tr_keras), (X_te_keras, Y_te_keras) = cifar10.load_data()
-Y_tr_keras, Y_te_keras = torch.from_numpy(np.array(Y_tr_keras)), torch.from_numpy(np.array(Y_te_keras))
-Y_tr_keras, Y_te_keras = torch.squeeze(Y_tr_keras), torch.squeeze(Y_tr_keras)
+print("**"*5+"Data info"+"**"*5)
+img_dim = X_tr.shape[1]
 
-X_te_tsne, Y_te_tsne = deepcopy(X_te), deepcopy(Y_te)
+print(f"X_tr shape: {X_tr.shape}, X_tr dtype: {X_tr.dtype}, X_tr type: {type(X_tr)} \n \
+    X_tr[1] shape: {X_tr[1].shape}, X_tr[1] dtype: {X_tr[1].dtype}, X_tr[1] type: {type(X_tr[1])}\n")
+
+print(f"Y_tr shape: {Y_tr.shape},Y_tr dtype: {Y_tr.dtype}, Y_tr type: {type(Y_tr)} \n \
+    Y_tr[1] shape: {Y_tr[1].shape}, Y_tr[1] dtype: {Y_tr[1].dtype}, Y_tr[1] type: {type(Y_tr[1])}\n")
+
+print("**"*10)
+
+
 
 # Generate initially labeled pool 
 ALD = ActiveLearningDataset(X_tr, Y_tr, NUM_INIT_LABELED)
 
 # Load network 
-net = get_net(NET, data_args)
+net = get_net(NET, load_data_args)
 
 list_queried_idxs = []
 
 if STRATEGY == 'coreset':
-    strategy = Coreset(ALD, net, args)
+    strategy = Coreset(ALD, net, learning_args)
 elif STRATEGY == 'uncertainty':
-    strategy = Uncertainty_Strategy(ALD, net, args)
+    strategy = Uncertainty_Strategy(ALD, net, learning_args)
 elif STRATEGY == 'max_entropy':
-    strategy = Max_Entropy_Strategy(ALD, net, args)
+    strategy = Max_Entropy_Strategy(ALD, net, learning_args)
 elif STRATEGY == 'bayesian_sparse_set':
-    strategy = Bayesian_Sparse_Set_Strategy(ALD, net, args)
+    strategy = Bayesian_Sparse_Set_Strategy(ALD, net, learning_args)
 elif STRATEGY == 'DFAL':
-    strategy = DFAL(ALD, net, args)
+    strategy = DFAL(ALD, net, learning_args)
 elif STRATEGY == 'BUDAL':
-    strategy = BUDAL(ALD, net, args)
+    strategy = BUDAL(ALD, net, learning_args)
 elif STRATEGY == 'random':
-    strategy = Random_Strategy(ALD, net, args)
+    strategy = Random_Strategy(ALD, net, learning_args)
 else: 
     sys.exit("A valid strategy is not specified, terminating execution..")
 
@@ -135,7 +147,7 @@ fh.write('\n \t\t ***** NEW AL SESSION ***** \n')
 fh.write('*** INFO ***\n')
 fh.write(f'Strategy: {type(strategy).__name__}, Dataset: {DATA_SET}, Number of training samples: {n_pool}, Number initially labeled samples: {len(ALD.index["labeled"])}\n'
         f'Number of testing samples: {len(Y_te)}, Learning network: {NET}, Num query: {NUM_QUERY}, Budget: {BUDGET}, SEED: {SEED}\n')
-fh.write(f'Num epochs: {args["n_epoch"]}, Training batch size: {args["loader_tr_args"]["batch_size"]}, Testing batch size: {args["loader_te_args"]["batch_size"]}\n')
+fh.write(f'Num epochs: {learning_args["n_epoch"]}, Training batch size: {learning_args["loader_tr_args"]["batch_size"]}, Testing batch size: {learning_args["loader_te_args"]["batch_size"]}\n')
 fh.write('--'*10)
 fh.close()
 
@@ -165,11 +177,10 @@ while len(ALD.index['labeled']) < BUDGET + NUM_INIT_LABELED:
     tic = datetime.now()
 
     rnd += 1
-    n_pool_2 = len(ALD.index['unlabeled'])
 
     NUM_QUERY = min(NUM_QUERY, NUM_INIT_LABELED + BUDGET - len(ALD.index['labeled']))
 
-    queried_idxs = strategy.query(NUM_QUERY, n_pool_2)
+    queried_idxs = strategy.query(NUM_QUERY)
 
     if (type(strategy).__name__ == 'DFAL' or type(strategy).__name__ == 'Random_Strategy' or type(strategy).__name__ == 'Uncertainty_Strategy' \
         or type(strategy).__name__ == 'Max_Entropy_Strategy'):
@@ -206,3 +217,4 @@ if len(acc) == len(num_labeled_samples):
     plot_learning_curves(num_labeled_samples, acc, config, STRATEGY, SEED)
 else:
     print("Acc is not same length as num labeled samples")
+
