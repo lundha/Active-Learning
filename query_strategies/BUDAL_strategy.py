@@ -59,7 +59,6 @@ class BUDAL(Strategy):
         for i in range(len(idx_ulb)):
             if i % 100 == 0:
                 print('adv {}/{}'.format(i, len(idx_ulb)))
-            print(i)
             x, _, _ = handler[i]
             dis[i] = self.cal_dis(x)
 
