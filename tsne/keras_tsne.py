@@ -96,13 +96,13 @@ def plot_tsne_categories(data_x, data_y, tx, ty, queried_idxs, out_dir, args):
     # _, (x_test, y_test) = cifar10.load_data()
     dataset, strategy = args['dataset'], args['strategy']
     seed = randint(1,100)
-    data_y = np.asarray(data_y)
 
-    plt.figure(figsize = (16,12))
+    plt.figure(figsize = (8,6))
 
     for j in range(len(queried_idxs)):
 
-        mapped_y = map_list(data_y, queried_idxs[j])
+        new_data_y = np.asarray(data_y)
+        mapped_y = map_list(new_data_y, queried_idxs[j])
         mapped_y = np.asarray(mapped_y)
         print(f"Length mapped y: {mapped_y}")
         classes = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
@@ -110,15 +110,15 @@ def plot_tsne_categories(data_x, data_y, tx, ty, queried_idxs, out_dir, args):
             # y_i is a vector that is true on corresponding indexes with data_y for each class in classes
             # i.e true for all 'airplane' elements in data_y on first iteration. This is to correctly color the
             # scatter plot
-            y_i = data_y == i
+            y_i = new_data_y == i
             plt.scatter(tx[y_i[:,0]], ty[y_i[:,0]], label=classes[i])
             # An idea would be to do an equal masking with queried elements
         #plt.legend(loc=4)
         plt.scatter(tx[mapped_y], ty[mapped_y], marker="^", c='black')
         plt.gca().invert_yaxis()
 
-        strat = strategy[j] 
         len_q_idx = len(queried_idxs[j])
+        strat = strategy[j]
         
         plt.savefig(os.path.join(out_dir, f"TSNE_{dataset}_q{len_q_idx}_{strat}_{seed}.eps"))
 

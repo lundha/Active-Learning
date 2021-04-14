@@ -11,7 +11,7 @@ from utils.utils import load_data_pool, print_image, sub_sample_dataset, load_da
 from torch.utils.data import DataLoader
 from torchvision import transforms, utils
 from query_strategies import Coreset, Random_Strategy, Uncertainty_Strategy, Max_Entropy_Strategy, Bayesian_Sparse_Set_Strategy, \
-                            Strategy, DFAL, BUDAL
+                            Strategy, DFAL, BUDAL, BUDAL_2
 from datetime import datetime
 from kcenter_greedy import KCenterGreedy
 from skimage import io, transform
@@ -38,9 +38,13 @@ def compare_tsne():
     NUM_QUERY = 200  #config['NUM_QUERY']
     NUM_WORKERS = config['NUM_WORKERS']
     NUM_INIT_LABELED = 0 #config['NUM_INIT_LABELED']
-    STRATEGIES = ['bayesian_sparse_set', 'coreset', 'uncertainty', 'max_entropy']
+    STRATEGIES = ['BUDAL_2', 'coreset', 'BUDAL', 'DFAL', 'max_entropy']
     DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--strategy', default='DFAL', type=str, help='Choose different strategy for TSNE')
+    args = parser.parse_args()
+    STRATEGY = args.strategy
 
     load_data_args = {'CIFAR10':
                 {
@@ -49,7 +53,6 @@ def compare_tsne():
                     'file_ending': ".png",
                     'num_channels': 3,
                     'device': DEVICE
-
                 },
                 'PLANKTON':
                 {
@@ -58,7 +61,6 @@ def compare_tsne():
                     'file_ending': ".",
                     'num_channels': 3,
                     'device': DEVICE
-
                 }
             }
 
@@ -79,8 +81,8 @@ def compare_tsne():
 
         }
 
-    tsne_args = {'dataset': 'CIFAR10',
-                'strategy': ['bayesian_sparse_set'] #['bayesian_sparse_set', 'coreset', 'uncertainty', 'max_entropy']
+    tsne_args = {'dataset': DATA_SET,
+                'strategy': STRATEGIES
             }
 
     data_args = load_data_args[DATA_SET]
@@ -88,11 +90,9 @@ def compare_tsne():
 
     HEADER_FILE = data_args['data_dir'] + "header.tfl.txt"
     FILENAME = data_args['data_dir'] + "image_set.data"
-    STRATEGIES = tsne_args['strategy']
+    num_classes = data_args['num_classes']
 
-    (X_tr, Y_tr), (X_te, Y_te) = cifar10.load_data()
-
-    num_classes = 10
+    (_, _), (X_te, Y_te) = cifar10.load_data()
 
     X_te_tsne, Y_te_tsne = deepcopy(X_te), deepcopy(Y_te)
 
@@ -105,33 +105,36 @@ def compare_tsne():
     list_queried_idxs = []
 
     tic = datetime.now()
+    
+    for STRATEGY in STRATEGIES:
 
-    if STRATEGY == 'coreset':
-        strategy = Coreset(ALD, net, args)
-    elif STRATEGY == 'uncertainty':
-        strategy = Uncertainty_Strategy(ALD, net, args)
-    elif STRATEGY == 'max_entropy':
-        strategy = Max_Entropy_Strategy(ALD, net, args)
-    elif STRATEGY == 'bayesian_sparse_set':
-        strategy = Bayesian_Sparse_Set_Strategy(ALD, net, args)
-    elif STRATEGY == 'DFAL':
-        strategy = DFAL(ALD, net, args)
-    elif STRATEGY == 'BUDAL':
-        strategy = BUDAL(ALD, net, args)
-    else:
-        strategy = Random_Strategy(ALD, net, args)
+        if STRATEGY == 'coreset':
+            strategy = Coreset(ALD, net, args)
+        elif STRATEGY == 'uncertainty':
+            strategy = Uncertainty_Strategy(ALD, net, args)
+        elif STRATEGY == 'max_entropy':
+            strategy = Max_Entropy_Strategy(ALD, net, args)
+        elif STRATEGY == 'bayesian_sparse_set':
+            strategy = Bayesian_Sparse_Set_Strategy(ALD, net, args)
+        elif STRATEGY == 'DFAL':
+            strategy = DFAL(ALD, net, args)
+        elif STRATEGY == 'BUDAL':
+            strategy = BUDAL(ALD, net, args)
+        elif STRATEGY == 'BUDAL_2':
+            strategy = BUDAL_2(ALD, net, args)
+        else:
+            strategy = Random_Strategy(ALD, net, args)
 
-    # Number of unlabeled samples (pool)
-    n_pool = len(ALD.index['unlabeled'])
-    print(type(strategy).__name__)
-    tsne_args['strategy'] = type(strategy).__name__
-    print(tsne_args['strategy'])
-    print(f"Query indexes and plotting")
-    queried_idxs = strategy.query(NUM_QUERY, n_pool)
-    queried_idxs = np.asarray(queried_idxs)
-    list_queried_idxs.append(queried_idxs)
-    print(f"Num queried indexes: {len(queried_idxs)}")
-
+        # Number of unlabeled samples (pool)
+        n_pool = len(ALD.index['unlabeled'])
+        print(type(strategy).__name__)
+        print(f"Query indexes and plotting")
+        queried_idxs = strategy.query(NUM_QUERY, n_pool)
+        queried_idxs = np.asarray(queried_idxs)
+        list_queried_idxs.append(queried_idxs)
+        print(f"Num queried indexes: {len(queried_idxs)}")
+        plot_tsne(X_te_tsne, Y_te_tsne, list_queried_idxs, num_classes, tsne_args)    
+    
     plot_tsne(X_te_tsne, Y_te_tsne, list_queried_idxs, num_classes, tsne_args)
     print(f"Total run time: {datetime.now()-tic}")
 
