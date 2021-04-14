@@ -10,6 +10,7 @@ python3 run.py --Strategy <Strategy name>
 --Strategy parameter is optional, can also be specified in config.py
 
 
+
 ## Screen session
 
 Screen session allows to detach terminal processes so that they continue when quitting the ssh-session. 

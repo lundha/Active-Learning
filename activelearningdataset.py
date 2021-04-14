@@ -47,7 +47,6 @@ class ActiveLearningDataset:
         if not isinstance(idxs_unlabeled, list):
             idxs_unlabeled = list(idxs_unlabeled)
 
-        print(f"Idx before mapping: {idxs_unlabeled}")
         idx = self.index['unlabeled'][idxs_unlabeled]
         
         if not isinstance(idx, list):
