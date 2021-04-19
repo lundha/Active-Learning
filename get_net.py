@@ -1,15 +1,18 @@
 
 from torchvision.models import resnet18, resnet34
 import torch.nn as nn
+import torch.nn.functional as F
+import resnet
 
 def get_net(name, args):
 
     if name=='resnet18':
-        net = ResNet18(n_classes=args['num_classes'], n_channels=args['num_channels'], device=args['device'])
+        net = resnet.ResNet18()
+        #net = ResNet18(n_classes=args['num_classes'], n_channels=args['num_channels'], device=args['device'])
     elif name=='resnet34':
-        net = ResNet18(n_classes=args['num_classes'], n_channels=args['num_channels'], device=args['device'])
+        net = ResNet34(n_classes=args['num_classes'], n_channels=args['num_channels'], device=args['device'])
     elif name=='CIFAR_NET':
-        net = ResNet18(n_classes=args['num_classes'], n_channels=args['num_channels'], device=args['device'])
+        net = CIFAR_NET
     else:
         return "Invalid name"
     return net
@@ -18,7 +21,7 @@ class ResNet18:
 
     def __init__(self, n_classes, n_channels, device):
         self.n_classes = n_classes
-        self.model = resnet18(pretrained=True, progress=True)
+        self.model = resnet18(pretrained=False, progress=True)
         self.__change_last_layer()
         self.device = device
         print("The code is running on {}".format(self.device))

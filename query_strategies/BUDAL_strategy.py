@@ -81,7 +81,7 @@ class BUDAL(Strategy):
         nx.requires_grad_()
         eta = torch.zeros(nx.shape)
 
-        out = self.classifier(nx+eta)
+        out, _ = self.classifier(nx+eta)
         n_class = out.shape[1]
         py = out.max(1)[1].item()
         ny = out.max(1)[1].item()
@@ -111,7 +111,7 @@ class BUDAL(Strategy):
 
             eta += ri.clone()
             nx.grad.data.zero_()
-            out = self.classifier(nx+eta)
+            out, _ = self.classifier(nx+eta)
             py = out.max(1)[1].item()
             i_iter += 1
         

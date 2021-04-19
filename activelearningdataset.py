@@ -36,8 +36,8 @@ class ActiveLearningDataset:
         shuffled_indices = np.random.permutation(self.index['unlabeled'])
         return shuffled_indices[:init_num_labeled], shuffled_indices[init_num_labeled:]
 
-    
-    def move_from_unlabeled_to_labeled(self, idxs_unlabeled):
+
+    def move_from_unlabeled_to_labeled(self, idxs_unlabeled, strategy):
         '''
         Maps local index of unlabeled data point to global index w.r.t X, and moves index from unlabeled to train
         :param: idxs to be moved
@@ -46,30 +46,22 @@ class ActiveLearningDataset:
 
         if not isinstance(idxs_unlabeled, list):
             idxs_unlabeled = list(idxs_unlabeled)
-
-        idx = self.index['unlabeled'][idxs_unlabeled]
         
-        if not isinstance(idx, list):
-            idx = list(idx)
+        if (type(strategy).__name__ in ['DFAL, Random_Strategy', 'Uncertainty_Strategy, Max_Entropy_Strategy']):
 
+            self.index['unlabeled'] = self.index['unlabeled'][ ~np.isin(self.index['unlabeled'], idxs_unlabeled)]
+            self.index['labeled'] = np.append(self.index['labeled'], idxs_unlabeled, axis=0)
+        
+        else:
 
-        self.index['unlabeled'] = np.delete(self.index['unlabeled'], idxs_unlabeled, axis=0)
-        self.index['labeled'] = np.append(self.index['labeled'], idxs_unlabeled, axis=0)
-        #return self.X[idx], self.Y[idx]  
+            idx = self.index['unlabeled'][idxs_unlabeled]
+            
+            if not isinstance(idx, list):
+                idx = list(idx)
 
-    def on_value_move_from_unlabeled_to_labeled(self, idxs_unlabeled):
-        '''
-        Maps local index of unlabeled data point to global index w.r.t X, and moves index from unlabeled to train
-        :param: idxs to be moved
-        :return: Data point(s) and label(s) of the data corresponding to the moved index/indices.
-        '''
+            self.index['unlabeled'] = np.delete(self.index['unlabeled'], idxs_unlabeled, axis=0)
+            self.index['labeled'] = np.append(self.index['labeled'], idxs_unlabeled, axis=0)
 
-        if not isinstance(idxs_unlabeled, list):
-            idxs_unlabeled = list(idxs_unlabeled)
-
-        self.index['unlabeled'] = self.index['unlabeled'][ ~np.isin(self.index['unlabeled'], idxs_unlabeled)]
-        self.index['labeled'] = np.append(self.index['labeled'], idxs_unlabeled, axis=0)
-        #return self.X[idx], self.Y[idx]  
 
     
 

@@ -17,7 +17,7 @@ from kcenter_greedy import KCenterGreedy
 from skimage import io, transform
 from activelearningdataset import ActiveLearningDataset
 from get_net import get_net
-from download_dataset import get_dataset
+from get_dataset import get_dataset
 from config import update_config, load_config
 from plot import plot_learning_curves
 from tsne_compare_strategies import plot_tsne
@@ -44,8 +44,8 @@ DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 parser = argparse.ArgumentParser()
 parser.add_argument('--strategy', default=STRATEGY, type=str, help='Choose different strategy than specified in config')
 args = parser.parse_args()
-SEED = randint(1,100)
 STRATEGY = args.strategy
+SEED = randint(1,100)
 
 LOG_FILE = f"./LOGS/{DATA_SET}_{STRATEGY}_q{NUM_QUERY}_f{FRACTION}.log"
 
@@ -56,7 +56,6 @@ load_data_args = {'CIFAR10':
                 'num_classes': 10,
                 'file_ending': ".png",
                 'num_channels': 3,
-                'device': DEVICE
             },
             'PLANKTON10':
             {
@@ -65,18 +64,17 @@ load_data_args = {'CIFAR10':
                 'num_classes': 10,
                 'file_ending': ".jpg",
                 'num_channels': 3,
-                'device': DEVICE
             }
         }
 
 learning_args = {'CIFAR10': 
         {
             'data_set': 'CIFAR10',
-            'n_epoch': 10,
+            'n_epoch': 20,
             'img_dim': 32,  
             'transform': transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616))]), 
-            'loader_tr_args': {'batch_size': 32, 'num_workers': NUM_WORKERS},
-            'loader_te_args': {'batch_size': 1000, 'num_workers': NUM_WORKERS},
+            'tr_args': {'batch_size': 64, 'lr': 0.05, 'weight_decay': 0.0001, 'num_workers': NUM_WORKERS},
+            'te_args': {'batch_size': 1000, 'lr': 0.05, 'weight_decay': 0.0001, 'num_workers': NUM_WORKERS},
         },
         'PLANKTON10':
         {
@@ -84,8 +82,8 @@ learning_args = {'CIFAR10':
             'n_epoch': 10,
             'img_dim': 32,
             'transform': transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]), 
-            'loader_tr_args': {'batch_size': 64, 'num_workers': NUM_WORKERS},
-            'loader_te_args': {'batch_size': 1000, 'num_workers': NUM_WORKERS},         
+            'tr_args': {'batch_size': 64, 'lr': 0.05, 'weight_decay': 0.0001, 'num_workers': NUM_WORKERS},
+            'te_args': {'batch_size': 1000, 'lr': 0.05, 'weight_decay': 0.0001, 'num_workers': NUM_WORKERS},         
         }
 
     }
@@ -141,7 +139,7 @@ print(type(strategy).__name__)
 print(f"Number of training samples: {n_pool}, Number initially labeled: {len(ALD.index['labeled'])}, Number of testing samples: {len(Y_te)}")
 
 
-##### LOGGING 
+##### LOGGING #####
 fh = open(LOG_FILE, 'a+')
 fh.write('\n \t\t ***** NEW AL SESSION ***** \n')
 fh.write('*** INFO ***\n')
@@ -155,7 +153,6 @@ fh.close()
 init_tic = datetime.now()
 rnd = 0
 print(f"Round: {rnd}")
-
 strategy.train()
 P = strategy.predict(X_te, Y_te)
 
@@ -177,16 +174,11 @@ while len(ALD.index['labeled']) < BUDGET + NUM_INIT_LABELED:
     tic = datetime.now()
 
     rnd += 1
-
     NUM_QUERY = min(NUM_QUERY, NUM_INIT_LABELED + BUDGET - len(ALD.index['labeled']))
 
     queried_idxs = strategy.query(NUM_QUERY)
 
-    if (type(strategy).__name__ == 'DFAL' or type(strategy).__name__ == 'Random_Strategy' or type(strategy).__name__ == 'Uncertainty_Strategy' \
-        or type(strategy).__name__ == 'Max_Entropy_Strategy'):
-        ALD.on_value_move_from_unlabeled_to_labeled(queried_idxs)
-    else: 
-        ALD.move_from_unlabeled_to_labeled(queried_idxs)
+    ALD.move_from_unlabeled_to_labeled(queried_idxs, strategy)
 
     strategy.train()
     P = strategy.predict(X_te, Y_te)
@@ -201,10 +193,9 @@ while len(ALD.index['labeled']) < BUDGET + NUM_INIT_LABELED:
     fh.close()
     ###################
     
-print(acc)
-print(num_labeled_samples)
-print(type(strategy).__name__)
-print(f"Total run time: {datetime.now() - init_tic}")
+
+
+print(f"Acc: {acc}, Num labeled samples: {num_labeled_samples}, Strategy: {type(strategy).__name__}, Total run time: {datetime.now() - init_tic}")
 
 ##### LOGGING #####
 fh = open(LOG_FILE, 'a+')
