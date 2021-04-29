@@ -13,7 +13,7 @@ parser.add_argument('--num_query', default=1000, type=int, help='Number of sampl
 parser.add_argument('--budget', default=10000, type=int, help='Budget for sample annotation')
 parser.add_argument('--num_workers', default=4, type=int, help='number of workers in torch')
 parser.add_argument('--fraction', default=1, type=float, help='fraction of samples to use')
-
+parser.add_argument('--cuda_n', default=1, type=int, help='Cuda to use (0 or 1)')
 args = vars(parser.parse_args())
 
 def update_config(args) -> None:

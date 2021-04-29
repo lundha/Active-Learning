@@ -14,7 +14,6 @@ from torch import nn
 import torchfile
 from torch.autograd import Variable
 import resnet
-import vgg
 import torch.optim as optim
 import pdb
 from torch.nn import functional as F
@@ -39,10 +38,19 @@ from sklearn.utils import check_random_state
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import FLOAT_DTYPES
 from sklearn.metrics.pairwise import rbf_kernel as rbf
-#from sklearn.externals.six import string_types
 from six import string_types
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.metrics import pairwise_distances
+
+class BadgeSampling(Strategy):
+    def __init__(self, ALD, net, args):
+        super(BadgeSampling, self).__init__(ALD, net, args)
+
+    def query(self, num_query):
+        idx_ulb = self.ALD.index['unlabeled']
+        gradEmbedding = self.get_grad_embedding(self.ALD.X[idx_ulb], self.ALD.Y.numpy()[idx_ulb]).numpy()
+        chosen = init_centers(gradEmbedding, num_query)
+        return chosen
 
 # kmeans ++ initialization
 def init_centers(X, K):
@@ -76,12 +84,3 @@ def init_centers(X, K):
     vgt = val[val > 1e-2]
     return indsAll
 
-class BadgeSampling(Strategy):
-    def __init__(self, X, Y, idxs_lb, net, handler, args):
-        super(BadgeSampling, self).__init__(X, Y, idxs_lb, net, handler, args)
-
-    def query(self, n):
-        idxs_unlabeled = np.arange(self.n_pool)[~self.idxs_lb]
-        gradEmbedding = self.get_grad_embedding(self.X[idxs_unlabeled], self.Y.numpy()[idxs_unlabeled]).numpy()
-        chosen = init_centers(gradEmbedding, n),
-        return idxs_unlabeled[chosen]

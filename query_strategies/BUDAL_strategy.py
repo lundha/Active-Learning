@@ -18,25 +18,28 @@ class BUDAL(Strategy):
         self.max_iter = 50
  
     def query(self, num_query):
-
-        # Deep Fool on n_pool
-        # Return sorted list from most uncertain to least uncertain
-        uncertain_samples = self.uncertain_query()
-        print(f"Uncertain samples: {uncertain_samples}")
-        blended_uncertain_list = uncertain_samples[0:int(len(uncertain_samples) * self.blending_constant)]
+        '''
+        Budal query method
+        param num_query: number of samples to be queried for each round
+        '''
         
-        # 0.9 is the blending delta
-        self.blending_constant = self.blending_constant*0.9
+        uncertain_samples, _ = self.uncertain_query()
+        
+        split = int(len(uncertain_samples) * self.blending_constant)
+
+        blended_uncertain_list = uncertain_samples[0:split]
         budal_samples = self.diverse_query(num_query, blended_uncertain_list)
-        print(f"Budal samples: {budal_samples}")
+        self.blending_constant = self.blending_constant*0.9
+        
         return budal_samples
         # Use core set to find num_query clusters from list * blending constant (0.0 - 1.0)
         # Return samples
+
+    def query2(self, num_query):
+        pass
     
     def diverse_query(self, num_query, samples):
-        #idx_ulb = self.ALD.index['unlabeled']
-
-        loader = self.prepare_loader(self.ALD.X[samples], self.ALD.Y[samples], self.args['transform'], self.args['loader_tr_args'])
+        loader = self.prepare_loader(self.ALD.X[samples], self.ALD.Y[samples], self.args['transform'], self.args['tr_args'])
         embedding = self.get_embedding(loader, self.embedding_dim)
         dist_mat = self.calculate_distance_matrix(embedding)
         greedy_idx, _ = self.find_greedy_solution(dist_mat, num_query)
@@ -44,6 +47,9 @@ class BUDAL(Strategy):
         opt_idx = greedy_idx   
         return opt_idx
     
+    def k_means_pp(self):
+        pass
+
     def uncertain_query(self):
         
         idx_ulb = self.ALD.index['unlabeled']
@@ -51,7 +57,6 @@ class BUDAL(Strategy):
         self.classifier.cpu()
         
         self.classifier.eval()
-        print(f"Shape unlabaled samples: {idx_ulb.shape}")
         dis = np.zeros(idx_ulb.shape)
 
         handler = self.prepare_handler(self.ALD.X[idx_ulb], self.ALD.Y[idx_ulb], self.args['transform'])
@@ -66,7 +71,7 @@ class BUDAL(Strategy):
 
         # argsort() returns the indices that would sort an array. Since the index of the dis() and element i in 
         # idx_ulb have 1-to-1 correspondence, it implicitly returns the idx of the unlabeled sample.
-        return idx_ulb[dis.argsort()]               
+        return idx_ulb[dis.argsort()], dis.argsort()               
         
     # Find greedy solution
     def find_greedy_solution(self, dist_mat, num_query):
@@ -92,7 +97,7 @@ class BUDAL(Strategy):
             out[0, py].backward(retain_graph=True)
             grad_np = nx.grad.data.clone()
             value_l = np.inf
-            ri = None
+            ri = torch.zeros(nx.shape) # 0 instead of None
 
             for i in range(n_class):
                 if i == py:
@@ -105,11 +110,15 @@ class BUDAL(Strategy):
                 wi = grad_i - grad_np
                 fi = out[0, i] - out[0, py]
                 value_i = np.abs(fi.item()) / np.linalg.norm(wi.numpy().flatten())
-
+  
                 if value_i < value_l:
                     ri = value_i/np.linalg.norm(wi.numpy().flatten()) * wi
+            try:
+                eta += ri.clone()
+            except AttributeError as e:
+                print(f"AttributeError: {str(e)}")
+                continue
 
-            eta += ri.clone()
             nx.grad.data.zero_()
             out, _ = self.classifier(nx+eta)
             py = out.max(1)[1].item()

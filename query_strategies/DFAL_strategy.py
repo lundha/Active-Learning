@@ -53,7 +53,7 @@ class DFAL(Strategy):
             out[0, py].backward(retain_graph=True)
             grad_np = nx.grad.data.clone()
             value_l = np.inf
-            ri = None
+            ri = torch.zeros(nx.shape)
 
             for i in range(n_class):
                 if i == py:

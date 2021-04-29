@@ -26,10 +26,16 @@ def get_CIFAR10(Fraction):
     Y_tr, Y_te = torch.from_numpy(np.array(Y_tr)), torch.from_numpy(np.array(Y_te))
     X_tr, Y_tr = make_subset(X_tr, Y_tr, Fraction)
     X_te, Y_te = make_subset(X_te, Y_te, Fraction)
-    return X_tr, Y_tr, X_te, Y_te
+    
+    split = int(len(X_te)//5)
+    X_valid, Y_valid = X_te[:split], Y_te[:split]
+    X_te, Y_te = X_te[:split], Y_te[:split]
+
+    return X_tr, Y_tr, X_te, Y_te, X_valid, Y_valid
 
 def get_PLANKTON10(Fraction, data_args):
 
+    print(data_args)
     data_dir = data_args['data_dir']+"/"
     header_file = data_dir + 'header.tfl.txt'
     filename = data_dir + 'image_set.data'
@@ -61,12 +67,13 @@ def get_PLANKTON10(Fraction, data_args):
     shuffled_indices = np.random.permutation([_ for _ in range(len(_images))])
     split = int(len(_images)/5)
 
+    X_valid, Y_valid = _images[shuffled_indices[:int(split//5)]], _labels[shuffled_indices[:int(split//5)]]
+    X_te, Y_te = _images[shuffled_indices[int(split//5):split]], _labels[shuffled_indices[int(split//5):split]]
     X_tr, Y_tr = _images[shuffled_indices[split:]], _labels[shuffled_indices[split:]] 
-    X_te, Y_te = _images[shuffled_indices[:split]], _labels[shuffled_indices[:split]]
 
-    Y_tr, Y_te = torch.from_numpy(Y_tr), torch.from_numpy(Y_te)
+    Y_tr, Y_te, Y_valid = torch.from_numpy(Y_tr), torch.from_numpy(Y_te), torch.from_numpy(Y_valid)
 
-    return X_tr, Y_tr, X_te, Y_te
+    return X_tr, Y_tr, X_te, Y_te, X_valid, Y_valid
     
 
 def make_subset(X, Y, Fraction):

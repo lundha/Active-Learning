@@ -18,6 +18,7 @@ class Autoencoder(nn.Module):
     def __init__(self, embedding_dim, img_dim):
         super(Autoencoder, self).__init__()
         dim = img_dim
+        print(dim)
         self.conv1 = nn.Conv2d(3, dim, kernel_size=5)
         self.conv2 = nn.Conv2d(dim, dim, kernel_size=5)
         self.conv3 = nn.Conv2d(dim, 2*dim, kernel_size=5)

@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 import numpy as np
 from autoencoder import Autoencoder
+from PIL import Image, ImageOps
 
 def load_data_pool(train=False, arg=None) -> DataSet:
     '''
@@ -76,6 +77,15 @@ def print_images(idxs, cols, rows):
 
     plt.show()
 
+def add_border(input_image, border, color):
+    #img = Image.open(input_image)
+    img = input_image
+    if isinstance(border, int) or isinstance(border, tuple):
+        output_image = ImageOps.expand(img, border=border, fill=color)
+    else:
+        raise RuntimeError('Border is not an integer or tuple!')
+    
+    return output_image
 
 def print_image(dataset, idx):
     '''
