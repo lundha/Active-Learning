@@ -1,4 +1,4 @@
-# Active learning core set approach
+# Active learning
 
 
 #### To install dependencies
