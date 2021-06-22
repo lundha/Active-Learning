@@ -31,3 +31,5 @@ dependencies:
     - gtimer
     - keras
     - tensorflow
+    - torchfile==0.1.0
+    - tqdm

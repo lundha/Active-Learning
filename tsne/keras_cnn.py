@@ -2,13 +2,13 @@ from __future__ import print_function
 import os
 import sys
 import keras
-from keras.applications import ResNet50
-from keras.datasets import cifar10
-from keras.preprocessing.image import ImageDataGenerator
-from keras.models import Sequential, Model
-from keras.layers import Dense, Dropout, Activation, Flatten
-from keras.layers import Conv2D, MaxPooling2D, BatchNormalization
-from keras.callbacks import ModelCheckpoint, CSVLogger, ReduceLROnPlateau
+from tensorflow.keras.applications import ResNet50
+from tensorflow.keras.datasets import cifar10
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.models import Sequential, Model
+from tensorflow.keras.layers import Dense, Dropout, Activation, Flatten
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, BatchNormalization
+from tensorflow.keras.callbacks import ModelCheckpoint, CSVLogger, ReduceLROnPlateau
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)

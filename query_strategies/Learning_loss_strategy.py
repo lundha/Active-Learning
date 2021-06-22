@@ -19,7 +19,6 @@ import torchvision.models as models
 from torchvision.datasets import CIFAR100, CIFAR10
 
 # Utils
-import visdom
 from tqdm import tqdm
 
 # Active Learning

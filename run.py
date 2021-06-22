@@ -37,7 +37,7 @@ BUDGET = al_args['budget']
 NET = learning_args['net']
 FRACTION = data_args['fraction']
 DEVICE = torch.device(f"cuda:{CUDA_N}" if torch.cuda.is_available() else "cpu")
-LOG_PATH = f"./V16_LOGS"
+LOG_PATH = f"./LOGS"
 LOG_FILE = f"{LOG_PATH}/{DATASET}_{STRATEGY}_q{NUM_QUERY}_f{FRACTION}.log"
 
 if not os.path.exists(LOG_PATH):
