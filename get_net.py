@@ -1,20 +1,23 @@
 
 from torchvision.models import resnet18, resnet34
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import resnet
 
-def get_net(name, args):
+
+
+
+def get_net(name, args, strategy):
 
     if name=='resnet18':
-        net = resnet.ResNet18()
-        #net = ResNet18(n_classes=args['num_classes'], n_channels=args['num_channels'], device=args['device'])
+        net = resnet.ResNet18(strategy, args)
     elif name=='resnet34':
         net = ResNet34(n_classes=args['num_classes'], n_channels=args['num_channels'], device=args['device'])
     elif name=='net3':
-        net = Net3()
+        net = Net3(args)
     elif name == 'net5':
-        net = Net5()
+        net = COAPModNet(args)
     else:
         return "Invalid name"
     return net
@@ -51,55 +54,83 @@ class ResNet34:
         return 50
 
 class Net3(nn.Module):
-    def __init__(self):
+    def __init__(self, args):
         super(Net3, self).__init__()
-        self.conv1 = nn.Conv2d(3, 32, kernel_size=5)
-        self.conv2 = nn.Conv2d(32, 32, kernel_size=5)
-        self.conv3 = nn.Conv2d(32, 64, kernel_size=5)
+        self.conv1 = nn.Conv2d(args['num_channels'], args['img_dim'], kernel_size=5)
+        self.conv2 = nn.Conv2d(args['img_dim'], args['img_dim'], kernel_size=5)
+        self.conv3 = nn.Conv2d(args['img_dim'], 2*args['img_dim'], kernel_size=5)
         self.fc1 = nn.Linear(1024, 50)
-        self.fc2 = nn.Linear(50, 10)
+        self.fc2 = nn.Linear(50, args['num_classes'])
 
     def forward(self, x):
-        x = F.relu(self.conv1(x))
-        x = F.relu(F.max_pool2d(self.conv2(x), 2))
-        x = F.relu(F.max_pool2d(self.conv3(x), 2))
-        x = x.view(-1, 1024)
+        x1 = self.conv1(x)
+        x2 = F.relu(x1)
+        x3 = self.conv2(x2)
+        x4 = F.relu(F.max_pool2d(x3, 2))
+        x5 = self.conv3(x4)
+        x6 = F.relu(F.max_pool2d(x5, 2))
+        x = x6.view(-1, 1024)
         e1 = F.relu(self.fc1(x))
         x = F.dropout(e1, training=self.training)
         x = self.fc2(x)
-        return x, e1
+        return x, e1, [x1,x3,x5,x6]
 
     def get_embedding_dim(self):
         return 50
 
-class Net5(nn.Module):
-    def __init__(self):
-        super(Net5, self).__init__()
-        self.pool = nn.MaxPool2d(2, 2)
-        self.conv1 = nn.Conv2d(1,  32, 3, padding=1)
-        self.conv2 = nn.Conv2d(32,  64, 3, padding=1)
-        self.conv3 = nn.Conv2d(64, 128, 3, padding=1)
-        self.conv4 = nn.Conv2d(128, 128, 3,padding=1)
-        self.conv5 = nn.Conv2d(128, 256, 3,padding=1)
-        self.conv6 = nn.Conv2d(256, 256, 3,padding=1)
-        self.fc1 = nn.Linear(256*10*10, 2000)
-        self.fc2 = nn.Linear(2000, 1000)
-        self.fc3 = nn.Linear(1000, 400)
-        self.fc4 = nn.Linear(400, 10)
+
+class test_Net3(nn.Module):
+    def __init__(self, args):
+        super().__init__()
+        self.conv1 = nn.Conv2d(args['num_channels'], args['img_dim'], kernel_size=5)
+        self.conv2 = nn.Conv2d(args['img_dim'], args['img_dim'], kernel_size=5)
+        self.conv3 = nn.Conv2d(args['img_dim'], 2*args['img_dim'], kernel_size=5)
+        self.fc1 = nn.Linear(1024, 50)
+        self.fc2 = nn.Linear(50, args['num_classes'])
 
     def forward(self, x):
-        x = F.relu(self.conv1(x))
-        x = self.pool(F.relu(self.conv2(x)))
-        x = F.relu(self.conv3(x))
-        x = self.pool(F.relu(self.conv4(x)))
-        x = F.relu(self.conv5(x))
-        x = self.pool(F.relu(self.conv6(x)))
-        x = x.view(-1, 256 * 10 * 10)
-        e1 = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(e1))
-        x = F.relu(self.fc3(x))
-        x = self.fc4(x)
-        return x, e1
-    
-    def get_embedding_dim(self) -> int:
+        x0 = x
+        x1 = F.relu(self.conv1(x0))
+        x2 = F.relu(self.conv2(x1))
+        x3 = F.relu(F.max_pool2d(x2,2))
+        x4 = F.relu(self.conv3(x3))
+        x5 = F.relu(F.max_pool2d(x4,2))
+        x6 = x5.view(-1, 1024)
+        e1 = F.relu(self.fc1(x6))
+        x = F.dropout(e1, training=self.training)
+        x = self.fc2(x)
+        return x, e1, [x0,x1,x2,x3,x4,x5,x6]
+
+    def get_embedding_dim(self):
         return 50
+
+
+
+def test(data, args):
+    net = test_Net3(args)
+    for name, params in net.named_parameters():
+        if 'conv' in name:
+            print(name, params.size())
+   
+    y, e1,(x0,x1,x2,x3,x4,x5,x6) = net(data)
+    print(x0.shape)
+    print(x1.shape)
+    print(x2.shape)
+    print(x3.shape)
+    print(x4.shape)
+    print(x5.shape)
+    print(x6.shape)
+    print(e1.shape)
+    print(y.shape)
+
+if __name__ == "__main__":
+    DEVICE = torch.device(f"cuda:{0}" if torch.cuda.is_available() else "cpu")
+    print(DEVICE)
+
+    args = {'img_dim': 32, 'num_channels': 3, 'num_classes': 10}
+    data = torch.randn(64,3,32,32)
+    from torch.autograd import Variable
+    data = Variable(data)
+
+    print(type(data))
+    test(data, args)

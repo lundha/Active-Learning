@@ -10,7 +10,7 @@ def solve_fac_loc(xx, yy, subset, n, budget):
     x={}
     y={}
     z={}
-
+    print(f'n: {n}')
     print ('gen z', datetime.now()-t_start)
     for i in range(n):
         # z_i: is a loss
@@ -107,10 +107,18 @@ def gurobi_solver(xx, yy, dd, subset, max_dist, budget, n):
         viol = [i for i in range(len(dd)) if dd[i]>cur_r]
         print(f"Viol: {viol}")
         # new_max_d = numpy.min(_d[_d>=cur_r])
-        new_max_d = min([d for d in dd if d >= cur_r])
+        try:
+            new_max_d = min([d for d in dd if d >= cur_r])
+        except ValueError as e:
+            print(str(e))
+            new_max_d = cur_r
         # new_min_d = numpy.max(_d[_d<=cur_r])
-        new_min_d = max([d for d in dd if d <= cur_r])
-        print("If it succeeds, new max is:", new_max_d, new_min_d)
+        try:
+            new_min_d = max([d for d in dd if d <= cur_r])
+            print("If it succeeds, new max is:", new_max_d, new_min_d)
+        except ValueError as e:
+            print(str(e))
+            new_min_d = cur_r
         for v in viol:
             x[xx[v], yy[v]].UB = 0
 

@@ -1,13 +1,14 @@
 {
     "DATA_DIR": "../datasets/cifar10",
     "PLOT_DIR": "./plots",
-    "NET": "resnet18",
-    "STRATEGY": "BUDAL",
-    "DATA_SET": "CIFAR10",
+    "NET": "net3",
+    "STRATEGY": "RANDOM",
+    "DATA_SET": "AILARON",
     "NUM_INIT_LABELED": 100,
     "NUM_QUERY": 1000,
-    "BUDGET": 20000,
+    "BUDGET": 3000,
     "NUM_WORKERS": 4,
-    "FRACTION": 1,
-    "CUDA_N": 0
+    "FRACTION":1,
+    "CUDA_N": 1,
+    "LOGGING_LEVEL": "DEBUG"
 }

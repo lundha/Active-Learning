@@ -1,50 +1,200 @@
-import click
 import json
 import argparse
+from torchvision import transforms
+
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--data_dir', default='../datasets/cifar10', help='Location of data set')
-parser.add_argument('--plot_dir', default='./plots', help='Dir for saving plot')
-parser.add_argument('--net', default='resnet18', help='Learning network')
-parser.add_argument('--strategy', default='coreset', help='AL strategy')
-parser.add_argument('--data_set', default='CIFAR10', help='Dataset')
-parser.add_argument('--num_init_labeled', default=0, type=int, help='number initial labeled samples')
+parser.add_argument('--strategy', default='CORESET', help='AL strategy')
+parser.add_argument('--dataset', default='CIFAR10', help='Dataset')
 parser.add_argument('--num_query', default=1000, type=int, help='Number of samples to query each round')
-parser.add_argument('--budget', default=10000, type=int, help='Budget for sample annotation')
 parser.add_argument('--num_workers', default=4, type=int, help='number of workers in torch')
-parser.add_argument('--fraction', default=1, type=float, help='fraction of samples to use')
 parser.add_argument('--cuda_n', default=1, type=int, help='Cuda to use (0 or 1)')
 args = vars(parser.parse_args())
 
-def update_config(args) -> None:
+STRATEGY = args['strategy']
+DATASET = args['dataset']
+NUM_QUERY = args['num_query']
+CUDA_N = args['cuda_n']
+NUM_WORKERS = args['num_workers']
 
-    new_config = {}
-    prev_config = load_config()
-    for key, value in prev_config.items():
-        new_config.update({key : return_latest_updated_value(value, args.get(key.lower()))})
-    print(new_config)
+TRIALS = 3
 
+args = {
+    "CIFAR10": {
+        "al_args": {
+            "num_init_labeled": 3900,
+            "num_query": NUM_QUERY,
+            "budget": 3000,
+        },
+        "data_args": {
+            "data_dir": "../datasets/cifar10/",
+            "plot_dir": "./plots",
+            "file_ending": ".png",
+            "class_names": ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck'],
+            "img_dim": 32,
+            "num_classes": 10,
+            "num_channels": 3,
+            "fraction": 0.08,
+        },
+        "learning_args": {
+            "n_epoch": 30,
+            "net": "resnet18",
+            "img_dim": 32,
+            "num_classes": 10,
+            'transform': transforms.Compose(
+                            [
+                            transforms.RandomHorizontalFlip(),
+                            transforms.RandomVerticalFlip(),
+                            transforms.RandomAffine(degrees=20,translate=(0.1,0.1),fillcolor=(255,255,255)),
+                            transforms.RandomCrop(size=32,padding=4),
+                            transforms.ToTensor(), 
+                            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616))]), 
+            'tr_args': {'batch_size': 64, 'lr': 0.0001, 'weight_decay': 0.0001, 'momentum': 0.9, 'num_workers': NUM_WORKERS},
+            'valid_args': {'batch_size': 400, 'num_workers': NUM_WORKERS},
+            'te_args': {'batch_size': 1000, 'lr': 0.0001, 'weight_decay': 0.0001, 'momentum': 0.9, 'num_workers': NUM_WORKERS},
+        }
+    }, 
+    "MNIST": {
+        "al_args": {
+            "strategy": "RANDOM",
+            "num_init_labeled": 100,
+            "num_query": NUM_QUERY,
+            "budget": 3500,
+        },
+        "data_args": {
+            "data_dir": "../datasets/mnist/",
+            "plot_dir": "./plots",
+            "file_ending": ".png",
+            "class_names": ['ZERO', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', \
+                            'NINE'],
+            "img_dim": 32,
+            "num_classes": 10,
+            "num_channels": 3,
+            "fraction": 0.08,
+        },
+        "learning_args": {
+            "n_epoch": 30,
+            "net": "net3",
+            "img_dim": 32,
+            "num_classes": 10,
+            "transform": transforms.Compose(
+                            [transforms.Grayscale(num_output_channels=3),
+                            transforms.RandomHorizontalFlip(),
+                            transforms.RandomVerticalFlip(),
+                            transforms.RandomAffine(degrees=7,translate=(0.1,0.1),fillcolor=(255,255,255)),
+                            transforms.Resize((32,32)),
+                            transforms.ToTensor(), 
+                            transforms.Normalize(mean=(0.95,), std=(0.2,))]), 
+            'tr_args': {'batch_size': 32, 'lr': 0.0001, 'weight_decay': 0.0001, 'momentum': 0.9, 'num_workers': NUM_WORKERS},
+            'valid_args': {'batch_size': 400, 'num_workers': NUM_WORKERS},
+            'te_args': {'batch_size': 1000, 'lr': 0.0001, 'weight_decay': 0.0001, 'momentum': 0.9, 'num_workers': NUM_WORKERS},
+        }
+    },
+    "PLANKTON10": {
+        "al_args": {
+            "num_init_labeled": 7484,
+            "num_query": NUM_QUERY,
+            "budget": 6500,
+        },
+        "data_args": {
+            "data_dir": "../datasets/train10",
+            "plot_dir": "./plots",
+            "file_ending": ".jpg",
+            "class_names": ['trichodesmium puff', 'protist other', 'acantharia protist', 'appendicularian s-shape', \
+                            'hydromedusae solmaris', 'trichodesmium bowtie', 'chaetognat sagitta', 'copepod cyclopoid oithona eggs', \
+                            'detritus other', 'echinoderm larva seastar brachiolaria'],
+            "img_dim": 32, 
+            "num_classes": 10,
+            "num_channels": 3,
+            "fraction": 1,
+        },
+        "learning_args": {
+            'n_epoch': 30,
+            'net': 'net3',
+            "img_dim": 32,
+            "num_classes": 10,
+            'transform': transforms.Compose(
+                            [transforms.Grayscale(num_output_channels=3),
+                            #transforms.RandomHorizontalFlip(),
+                            #transforms.RandomVerticalFlip(),
+                            #transforms.RandomAffine(degrees=30,translate=(0.1,0.1),fillcolor=(255,255,255)),
+                            transforms.Resize((32,32)),
+                            transforms.ToTensor(),
+                            transforms.Normalize(mean=(0.95,), std=(0.2,))]), 
+            'tr_args': {'batch_size': 32, 'lr': 0.0001, 'weight_decay': 0.0001, 'num_workers': NUM_WORKERS},
+            'valid_args': {'batch_size': 379, 'num_workers': NUM_WORKERS},
+            'te_args': {'batch_size': 1000, 'lr': 0.0001, 'weight_decay': 0.0001, 'num_workers': NUM_WORKERS},    
+        }
+    },
+    "AILARON": {
+        "al_args": {
+            "num_init_labeled": 100,
+            "num_query": NUM_QUERY,
+            "budget": 3500,
+        },
+        "data_args": {
+            "data_dir": "../datasets/dataset_balanced_new",
+            "plot_dir": "./plots",
+            "file_ending": ".tiff",
+            "class_names": ['FISH EGG', 'COPEPOD', 'DIATOM CHAIN', 'OTHER', 'FAECAL PELLETS', 'BUBBLE'],
+            "img_dim": 32, 
+            "num_classes": 6,
+            "num_channels": 3,
+            "fraction": 1,
+        },
+        "learning_args": {
+            'n_epoch': 30,
+            'net': 'net3',
+            "img_dim": 32,
+            "num_classes": 6,
+            'transform': transforms.Compose(
+                            [transforms.Grayscale(num_output_channels=3),
+                            transforms.RandomHorizontalFlip(),
+                            transforms.RandomVerticalFlip(),
+                            transforms.RandomAffine(degrees=30,translate=(0.1,0.1),fillcolor=(255,255,255)),
+                            transforms.Resize((32,32)),
+                            transforms.ToTensor(),
+                            transforms.Normalize(mean=(0.95,), std=(0.2,))]), 
+            'tr_args': {'batch_size': 32, 'lr': 0.0001, 'weight_decay': 0.0001, 'num_workers': NUM_WORKERS},
+            'valid_args': {'batch_size': 201, 'num_workers': NUM_WORKERS},
+            'te_args': {'batch_size': 1000, 'lr': 0.0001, 'weight_decay': 0.0001, 'num_workers': NUM_WORKERS},  
+        }
+    },
+    "PASTORE": {
+        "al_args": {
+            "num_init_labeled": 3900,
+            "num_query": NUM_QUERY,
+            "budget": 500,
+        },
+        "data_args": {
+            "data_dir": "../datasets/Pastore_Training",
+            "plot_dir": "./plots",
+            "file_ending": ".jpg",
+            "class_names": ['VOLVOX', 'SPIROSTOMUM AMBIGUUM', 'BLEPHARISMA AMERICANUM', 'ACTINOSPHAERIUM NUCLEOFILUM', \
+                            'EUPLOTES EURYSTOMUS', 'STENTOR COERULEUS', 'DILEPTUS', 'DIDINIUM NASUTUM', 'PARAMECIUM BURSARIA', \
+                            'ARCELLA VULGARIS'],
+            "img_dim": 32, 
+            "num_classes": 10,
+            "num_channels": 3,
+            "fraction": 1,
+        },
+        "learning_args": {
+            'n_epoch': 30,
+            'net': 'resnet18',
+            "img_dim": 32,
+            "num_classes": 10,
+            'transform': transforms.Compose(
+                            [transforms.Grayscale(num_output_channels=3),
+                            transforms.RandomHorizontalFlip(),
+                            transforms.RandomVerticalFlip(),
+                            transforms.RandomAffine(degrees=30,translate=(0.1,0.1),fillcolor=(255,255,255)),
+                            transforms.Resize((32,32)),
+                            transforms.ToTensor(),
+                            transforms.Normalize(mean=(0.95,), std=(0.2,))]), 
+            'tr_args': {'batch_size': 32, 'lr': 0.00001, 'weight_decay': 0.0001, 'num_workers': NUM_WORKERS},
+            'valid_args': {'batch_size': 199, 'num_workers': NUM_WORKERS},
+            'te_args': {'batch_size': 1000, 'lr': 0.00001, 'weight_decay': 0.0001, 'num_workers': NUM_WORKERS},  
+        }
+    }
+}
 
-    with open("config.json", 'w') as f:
-        json.dump(new_config, f)
-    f.close()
-
-
-def load_config() -> dict:
-    
-    with open("config.json") as f:
-        config = json.load(f)
-    f.close()
-    
-    return config
-
-def return_latest_updated_value(old_value, new_value):
-
-    if old_value == new_value:
-        return old_value
-    else:
-        return new_value
-
-
-if __name__ == "__main__":
-    update_config(args)

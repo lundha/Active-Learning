@@ -5,19 +5,21 @@ import numpy as np
 # Split into training and test set
 # Split into labeled and unlabeled data
 # Move data from unlabeled to labeled
-class Dataset():
-    pass
-
-
 
 class ActiveLearningDataset:
 
-    def __init__(self, X,Y, init_labeled):
-        self.X = X
-        self.Y = Y
-        self.index = {'labeled': np.arange(0), 'unlabeled': np.arange(len(X))} 
+    def __init__(self, X_train, Y_train, X_test, Y_test, X_valid, Y_valid, init_labeled, num_classes=10):
+        
+        self.X = X_train
+        self.Y = Y_train
+        self.X_valid = X_valid
+        self.Y_valid = Y_valid
+        self.X_test = X_test
+        self.Y_test = Y_test
+
+        self.index = {'labeled': np.arange(0), 'unlabeled': np.arange(len(self.X))} 
         self.index['labeled'], self.index['unlabeled'] = self.split_into_labeled_unlabeled(init_labeled)
-        self.class_count = np.zeros(10) # 10 number of classes
+        self.class_count = np.zeros(num_classes) 
 
     def __repr__(self):
         return f"Dataset \nNumber of datapoints: {str(len(self.X))} \nNum indexes labeled: {len(self.index['labeled'])}"
@@ -41,10 +43,14 @@ class ActiveLearningDataset:
         '''
         Function to count how many times each class have been queried 
         '''
-        for idx in queried_idxs:
-            self.class_count[self.Y[idx]] += 1
+        try:
+            for idx in queried_idxs:
+                self.class_count[self.Y[idx]] += 1
+        except Exception as e:
+            print(str(e))
+        class_count_prct = [round(elem/sum(self.class_count),2) for elem in self.class_count]
 
-        return self.class_count
+        return self.class_count, class_count_prct
 
     def move_from_unlabeled_to_labeled(self, idxs_unlabeled, strategy):
         '''
@@ -56,7 +62,7 @@ class ActiveLearningDataset:
         if not isinstance(idxs_unlabeled, list):
             idxs_unlabeled = list(idxs_unlabeled)
         
-        if (type(strategy).__name__ in ['DFAL', 'coreset', 'Random_Strategy', 'Uncertainty_Strategy', 'Max_Entropy_Strategy', 'ActiveLearningByLearning']):
+        if (type(strategy).__name__ in ['DFAL_Strategy', 'Random_Strategy', 'Uncertainty_Strategy', 'Max_Entropy_Strategy', 'ActiveLearningByLearning_Strategy']):
         
 
             self.index['unlabeled'] = self.index['unlabeled'][ ~np.isin(self.index['unlabeled'], idxs_unlabeled)]
@@ -71,7 +77,6 @@ class ActiveLearningDataset:
         
             self.index['unlabeled'] = np.delete(self.index['unlabeled'], idxs_unlabeled, axis=0)
             self.index['labeled'] = np.append(self.index['labeled'], idxs_unlabeled, axis=0)
-
 
     
 

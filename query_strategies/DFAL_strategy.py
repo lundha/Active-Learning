@@ -1,33 +1,36 @@
+
 import numpy as np
 import torch
 import torch.nn.functional as F
-from .strategy import Strategy
+from .Strategy import Strategy
+import PIL
+from matplotlib import pyplot as plt
+import sys
+from random import randint
 
+class DFAL_Strategy(Strategy):
+    def __init__(self, ALD, net, args, logger, **kwargs):
+        super().__init__(ALD, net, args, logger)
 
-class DFAL(Strategy):
-    def __init__(self, ALD, net, args):
-        super().__init__(ALD, net, args)
-        self.args = args
-        self.ALD = ALD
         self.max_iter = 50
-        
+        self.count = 0
+        self.prev_count = 0
+
     def query(self, num_query):
 
         idx_ulb = self.ALD.index['unlabeled']
 
-
         self.classifier.cpu()
-        
         self.classifier.eval()
-        print(f"Shape unlabaled samples: {idx_ulb.shape}")
+        self.logger.debug(f"Shape unlabaled samples: {idx_ulb.shape}")
         dis = np.zeros(idx_ulb.shape)
 
         handler = self.prepare_handler(self.ALD.X[idx_ulb], self.ALD.Y[idx_ulb], self.args['transform'])
-
+        self.count += 1
         for i in range(len(idx_ulb)):
             if i % 100 == 0:
-                print('adv {}/{}'.format(i, len(idx_ulb)))
-            x, y, idx = handler[i]
+                self.logger.debug(f'adv {i}/{len(idx_ulb)}')
+            x, _, _ = handler[i]
             dis[i] = self.cal_dis(x)
 
         self.classifier.cuda()
@@ -42,7 +45,7 @@ class DFAL(Strategy):
         nx.requires_grad_()
         eta = torch.zeros(nx.shape)
 
-        out, _ = self.classifier(nx+eta)
+        out, _, _ = self.classifier(nx+eta)
         n_class = out.shape[1]
         py = out.max(1)[1].item()
         ny = out.max(1)[1].item()
@@ -72,10 +75,41 @@ class DFAL(Strategy):
 
             eta += ri.clone()
             nx.grad.data.zero_()
-            out, _ = self.classifier(nx+eta)
+            out, _, _ = self.classifier(nx+eta)
             py = out.max(1)[1].item()
             i_iter += 1
+        ### To visualize adversarial attack ###
+        visualize = False
+        if self.count != self.prev_count and visualize == True:
+            import matplotlib.pyplot as plt
+            self.prev_count = self.count
+            classes = ['Airplane', 'Automobile', 'Bird', 'Cat', 'Deer', 'Dog', 'Frog', 'Horse', 'Ship', 'Truck']
+            nx = torch.squeeze(nx)
+            nx_new = torch.squeeze(nx+eta)
+            nx_new = nx_new.permute(1,2,0)
+            nx = nx.permute(1,2,0)
+            nx = nx.detach().numpy()
+            nx_new = nx_new.detach().numpy()
 
+            #mean = np.array([0.4914, 0.4822, 0.4465])
+            #std = np.array([0.2470, 0.2435, 0.2616])
+            mean = np.array([0.95, 0.95, 0.95])
+            std = np.array([0.2, 0.2, 0.2])
+            nx = std * nx + mean
+            nx_new = std * nx_new + mean
+            nx = np.clip(nx, 0, 1)
+            nx_new = np.clip(nx_new, 0, 1)
+            seed = randint(0,100)
+            plt.imshow(nx)
+            plt.axis('off')
+            plt.title(classes[ny])
+            plt.savefig(f'./dfal-imgs/nx_{self.count}_{seed}.png')
+            plt.imshow(nx_new)
+            plt.axis('off')
+            plt.title(classes[py])
+            plt.savefig(f'./dfal-imgs/nx_new_{self.count}_{seed}.png')
+            print(f"py: {classes[py]}, ny: {classes[ny]}")
+        
         return (eta*eta).sum()
 
 

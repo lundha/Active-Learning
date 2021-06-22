@@ -10,45 +10,58 @@ from autoencoder import Autoencoder
 from utils.utils import load_data_pool, print_image, sub_sample_dataset, load_data
 from torch.utils.data import DataLoader
 from torchvision import transforms, utils
-from query_strategies import Coreset, Random_Strategy, Uncertainty_Strategy, Max_Entropy_Strategy, Bayesian_Sparse_Set_Strategy, \
-                            Strategy, DFAL, BUDAL, Softmax_Hybrid_Strategy, BadgeSampling, LearningLoss, MarginSampling, KMeansSampling, \
-                            ActiveLearningByLearning
+from query_strategies import Strategy, Coreset_Strategy, Random_Strategy, Uncertainty_Strategy, Max_Entropy_Strategy, Bayesian_Sparse_Set_Strategy, \
+                            DFAL_Strategy, CIRAL_Strategy, Softmax_Hybrid_Strategy, BADGE_Strategy, Learning_Loss_Strategy, Margin_Strategy, \
+                            KMeans_Strategy, ActiveLearningByLearning_Strategy, All_Data_Strategy
 from datetime import datetime
 from kcenter_greedy import KCenterGreedy
 from skimage import io, transform
 from activelearningdataset import ActiveLearningDataset
 from get_net import get_net
+from sklearn import metrics
 from get_dataset import get_dataset
-from config import update_config, load_config
 from plot import plot_learning_curves
-from tsne_compare_strategies import plot_tsne
+from visualize_meta_results import plot_tsne
 from copy import deepcopy
-from keras.datasets import cifar10
+from config import args, STRATEGY, DATASET, NUM_WORKERS, TRIALS, CUDA_N
+import logging
 
 
-config = load_config()
+al_args = args[DATASET]['al_args']
+learning_args = args[DATASET]['learning_args']
+data_args = args[DATASET]['data_args']
 
-DATA_DIR = config['DATA_DIR']
-PLOT_DIR = config['PLOT_DIR']
-HEADER_FILE = DATA_DIR + "header.tfl.txt"
-FILENAME = DATA_DIR + "image_set.data"
-DATA_SET = config['DATA_SET']
-NET = config['NET']
-STRATEGY = config['STRATEGY']
-NUM_INIT_LABELED = config['NUM_INIT_LABELED']
-NUM_QUERY = config['NUM_QUERY']
-BUDGET = config['BUDGET']
-NUM_WORKERS = config['NUM_WORKERS']
-FRACTION = config['FRACTION']
-CUDA_N = config['CUDA_N']
+NUM_INIT_LABELED = al_args['num_init_labeled']
+NUM_QUERY = al_args['num_query']
+BUDGET = al_args['budget']
+NET = learning_args['net']
+FRACTION = data_args['fraction']
 DEVICE = torch.device(f"cuda:{CUDA_N}" if torch.cuda.is_available() else "cpu")
+LOG_PATH = f"./V16_LOGS"
+LOG_FILE = f"{LOG_PATH}/{DATASET}_{STRATEGY}_q{NUM_QUERY}_f{FRACTION}.log"
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--strategy', default=STRATEGY, type=str, help='Choose different strategy than specified in config')
-args = parser.parse_args()
-config['STRATEGY'] = STRATEGY = args.strategy
+if not os.path.exists(LOG_PATH):
+    os.makedirs(LOG_PATH)
 
-TRIALS = 3
+
+### CONFIGURE LOGGING ###
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+### OUTPUT STREAM
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+### TO FILE
+ch2 = logging.FileHandler(filename=LOG_FILE, mode='a+')
+ch2.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(levelname)s - %(message)s')
+
+ch.setFormatter(formatter)
+ch2.setFormatter(formatter)
+
+logger.addHandler(ch)
+logger.addHandler(ch2)
+########################
 
 acc_all = []
 
@@ -56,154 +69,97 @@ for TRIAL in range(TRIALS):
 
     SEED = randint(1,1000)
 
-    LOG_FILE = f"./V3_LOGS/{DATA_SET}_{STRATEGY}_q{NUM_QUERY}_f{FRACTION}.log"
-
-    ##### LOGGING #####
-    fh = open(LOG_FILE, 'a+')
-    fh.write('\n \t\t ***** NEW AL SESSION ***** \n')
-    fh.close()
-    ###################
-
-    load_data_args = {'CIFAR10':
-                {
-                    'data_dir': "../datasets/cifar10/",
-                    'num_classes': 10,
-                    'file_ending': ".png",
-                    'num_channels': 3,
-                },
-                'PLANKTON10':
-                {
-                    'data_dir': "../datasets/train10",
-                    'img_dim': 32, 
-                    'num_classes': 10,
-                    'file_ending': ".jpg",
-                    'num_channels': 3,
-                }
-            }
-
-    learning_args = {'CIFAR10': 
-            {
-                'data_set': 'CIFAR10',
-                'n_epoch': 20,
-                'img_dim': 32,  
-                'transform': transforms.Compose(
-                                [transforms.RandomHorizontalFlip(),
-                                transforms.RandomVerticalFlip(),
-                                transforms.RandomAffine(degrees=7,translate=(0.1,0.1),fillcolor=255),
-                                transforms.RandomCrop(size=32,padding=4),
-                                transforms.ToTensor(), 
-                                transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616))]), 
-                'tr_args': {'batch_size': 64, 'lr': 0.001, 'weight_decay': 0.0001, 'num_workers': NUM_WORKERS},
-                'valid_args': {'batch_size': 2000, 'num_workers': NUM_WORKERS},
-                'te_args': {'batch_size': 1000, 'lr': 0.001, 'weight_decay': 0.0001, 'num_workers': NUM_WORKERS},
-            },
-            'PLANKTON10':
-            {
-                'data_set': 'PLANKTON10',
-                'n_epoch': 10,
-                'img_dim': 32,
-                'transform': transforms.Compose(
-                                [transforms.Grayscale(num_output_channels=3),
-                                transforms.RandomHorizontalFlip(),
-                                transforms.RandomVerticalFlip(),
-                                transforms.RandomAffine(degrees=7,translate=(0.1,0.1),fillcolor=255),
-                                transforms.Resize((32,32)),
-                                transforms.ToTensor(),
-                                transforms.Normalize(mean=(0.95,), std=(0.2,))]), 
-                'tr_args': {'batch_size': 32, 'lr': 0.004, 'weight_decay': 0.0001, 'num_workers': NUM_WORKERS},
-                'valid_args': {'batch_size': 379, 'num_workers': NUM_WORKERS},
-                'te_args': {'batch_size': 1000, 'lr': 0.004, 'weight_decay': 0.0001, 'num_workers': NUM_WORKERS},         
-            }
-
-        }
-
-
-    load_data_args = load_data_args[DATA_SET]
-    learning_args = learning_args[DATA_SET]
-
-
-    X_tr, Y_tr, X_te, Y_te, X_valid, Y_valid = get_dataset(DATA_SET, load_data_args, Fraction=FRACTION)
-    print("**"*5+"Data info"+"**"*5)
-    img_dim = X_tr.shape[1]
-
-    print(f"X_tr shape: {X_tr.shape}, X_tr dtype: {X_tr.dtype}, X_tr type: {type(X_tr)} \n \
-        X_tr[1] shape: {X_tr[1].shape}, X_tr[1] dtype: {X_tr[1].dtype}, X_tr[1] type: {type(X_tr[1])}\n")
-
-    print(f"Y_tr shape: {Y_tr.shape},Y_tr dtype: {Y_tr.dtype}, Y_tr type: {type(Y_tr)} \n \
-        Y_tr[1] shape: {Y_tr[1].shape}, Y_tr[1] dtype: {Y_tr[1].dtype}, Y_tr[1] type: {type(Y_tr[1])}\n")
-
-    print("**"*10)
-
-
-    # Generate initially labeled pool 
-    ALD = ActiveLearningDataset(X_tr, Y_tr, NUM_INIT_LABELED)
-
-    # Load network 
-    net = get_net(NET, load_data_args)
-
- 
-    if STRATEGY == 'coreset':
-        strategy = Coreset(ALD, net, learning_args)
-    elif STRATEGY == 'uncertainty':
-        strategy = Uncertainty_Strategy(ALD, net, learning_args)
-    elif STRATEGY == 'max_entropy':
-        strategy = Max_Entropy_Strategy(ALD, net, learning_args)
-    elif STRATEGY == 'bayesian_sparse_set':
-        strategy = Bayesian_Sparse_Set_Strategy(ALD, net, learning_args)
-    elif STRATEGY == 'DFAL':
-        strategy = DFAL(ALD, net, learning_args)
-    elif STRATEGY == 'BUDAL':
-        strategy = BUDAL(ALD, net, learning_args)
-    elif STRATEGY == 'random':
-        strategy = Random_Strategy(ALD, net, learning_args)
-    elif STRATEGY == 'softmax_hybrid':
-        strategy = Softmax_Hybrid_Strategy(ALD, net, learning_args)
-    elif STRATEGY == 'BADGE':
-        strategy = BadgeSampling(ALD, net, learning_args)
-    elif STRATEGY == 'learning_loss':
-        strategy = LearningLoss(ALD, net, learning_args)
-    elif STRATEGY == 'all':
-        strategy_list = [DFAL(ALD, net, learning_args),
-                        Coreset(ALD, net, learning_args)]
-        strategy = ActiveLearningByLearning(ALD, net, learning_args, strategy_list)
-    else: 
-        sys.exit("A valid strategy is not specified, terminating execution..")
-
-    # Number of unlabeled samples (pool)
-    n_pool = len(ALD.index['unlabeled'])
-    print(type(strategy).__name__)
-    print(f"Number of training samples: {n_pool}, Number initially labeled: {len(ALD.index['labeled'])}, Number of testing samples: {len(Y_te)}")
-
-
-    ##### LOGGING #####
-    fh = open(LOG_FILE, 'a+')
-    fh.write(f'\n \t\t ***** Start trial {TRIAL+1}/{TRIALS} ***** \n')
-    fh.write(f'*** INFO *** Starting time: {datetime.now()}\n')
-    fh.write(f'Strategy: {type(strategy).__name__}, Dataset: {DATA_SET}, Number of training samples: {n_pool}, Number initially labeled samples: {len(ALD.index["labeled"])}\n'
-            f'Number of testing samples: {len(Y_te)}, Learning network: {NET}, Num query: {NUM_QUERY}, Budget: {BUDGET}, SEED: {SEED}\n')
-    fh.write(f'Num epochs: {learning_args["n_epoch"]}, Training batch size: {learning_args["tr_args"]["batch_size"]}, Testing batch size: {learning_args["te_args"]["batch_size"]}\n'
-            f'Learning rate: {learning_args["tr_args"]["lr"]}, Weight decay: {learning_args["te_args"]["weight_decay"]}\n')
-    fh.write('--'*10)
-    fh.close()
-
-    # Round 0 accuracy
-    init_tic = datetime.now()
-    rnd = 0
-    print(f"Round: {rnd}")
-    #strategy.train()
-    P = strategy.predict(X_te, Y_te)
-
     acc = []
     num_labeled_samples = []
-    num_labeled_samples.append(len(ALD.index['labeled']))
-    acc.append(round(1.0 * (Y_te==P).sum().item() / len(Y_te),4))
+    list_queried_idxs = []
+    
+    ##### LOGGING #####
+    logger.info('\t\t ***** NEW AL SESSION ***** ')
+    ###################
 
-    print(f"Testing accuracy {acc[rnd]}")
+
+    X_tr, Y_tr, X_te, Y_te, X_val, Y_val = get_dataset(DATASET, data_args)
 
     ##### LOGGING #####
-    fh = open(LOG_FILE, 'a+')
-    fh.write(f'\nRound: {rnd}, Testing accuracy: {acc[rnd]}, Number of labeled samples: {len(ALD.index["labeled"])}/{n_pool}, Iteration time: {datetime.now() - init_tic}\n')
-    fh.close()
+    logger.debug("**"*5+"Data info"+"**"*5)
+    img_dim = X_tr.shape[1]
+    logger.debug(f"X_tr shape: {X_tr.shape}, X_tr dtype: {X_tr.dtype}, X_tr type: {type(X_tr)} \n \
+        X_tr[1] shape: {X_tr[1].shape}, X_tr[1] dtype: {X_tr[1].dtype}, X_tr[1] type: {type(X_tr[1])}\n")
+
+    logger.debug(f"Y_tr shape: {Y_tr.shape},Y_tr dtype: {Y_tr.dtype}, Y_tr type: {type(Y_tr)} \n \
+        Y_tr[1] shape: {Y_tr[1].shape}, Y_tr[1] dtype: {Y_tr[1].dtype}, Y_tr[1] type: {type(Y_tr[1])}\n")
+    logger.debug(f"X_valid shape: {X_val.shape}")
+    logger.debug("**"*10)
+    ###################
+
+    # Generate initially labeled pool 
+    ALD = ActiveLearningDataset(X_tr, Y_tr, X_te, Y_te, X_val, Y_val, NUM_INIT_LABELED)
+
+    # Load learning network 
+    net = get_net(NET, data_args, strategy=STRATEGY)
+
+    # Load active learning strategy
+    strategies = {
+        'ALL': ActiveLearningByLearning_Strategy,
+        'ALL-DATA': All_Data_Strategy,
+        'BAYESIAN_SPARSE_SET': Bayesian_Sparse_Set_Strategy,
+        'BADGE': BADGE_Strategy,
+        'CIRAL': CIRAL_Strategy,
+        'CORESET': Coreset_Strategy,
+        'DFAL': DFAL_Strategy,
+        'KMEANS': KMeans_Strategy,
+        'LEARNING_LOSS': Learning_Loss_Strategy,
+        'MAX_ENTROPY': Max_Entropy_Strategy,
+        'RANDOM': Random_Strategy,
+        'SOFTMAX_HYBRID': Softmax_Hybrid_Strategy,
+        'UNCERTAINTY': Uncertainty_Strategy,
+    }
+
+    kwargs = {"strategy_list" : [DFAL_Strategy(ALD, net, learning_args, logger),
+                                Coreset_Strategy(ALD, net, learning_args, logger)], 
+            "log_file" : LOG_FILE, 
+            "n_epochs" : 100}
+    
+    strategy = strategies[STRATEGY](ALD, net, learning_args, logger, **kwargs)
+    init_pool = len(ALD.index["unlabeled"])
+
+    ##### LOGGING #####
+    logger.info(type(strategy).__name__)
+    logger.info(f"Number of training samples: {len(ALD.index['unlabeled'])}, Number initially labeled: {len(ALD.index['labeled'])}, Number of testing samples: {len(Y_te)}, "
+                f"Number of validation samples: {len(ALD.X_valid)}")
+    ###################
+
+
+    ##### LOGGING #####
+    logger.info(f'\t\t ***** Start trial {TRIAL+1}/{TRIALS} *****')
+    logger.info(f'Starting time: {datetime.now()}')
+    logger.info(f'Strategy: {type(strategy).__name__}, Dataset: {DATASET}, Number of training samples: {len(ALD.index["unlabeled"])}, Number initially labeled samples: {len(ALD.index["labeled"])}\n'
+            f'Number of testing samples: {len(Y_te)}, Learning network: {NET}, Num query: {NUM_QUERY}, Budget: {BUDGET}, SEED: {SEED}')
+    logger.info(f'Num epochs: {learning_args["n_epoch"]}, Training batch size: {learning_args["tr_args"]["batch_size"]}, Testing batch size: {learning_args["te_args"]["batch_size"]}, '
+            f'Learning rate: {learning_args["tr_args"]["lr"]}, Weight decay: {learning_args["te_args"]["weight_decay"]}')
+    logger.info('--'*10)
+    ###################
+
+    init_tic = datetime.now()
+    rnd = 0
+    strategy.train()
+    
+    P = strategy.predict(X_te, Y_te)
+
+    ### CALCULATE BALANCED ACCURACY / ACCURACY ###
+    if DATASET == 'PLANKTON10':
+        accuracy = metrics.balanced_accuracy_score(Y_te, P)
+    else:
+        accuracy = float(1.0 * (Y_te==P).sum().item() / len(Y_te))
+    ###############################################
+
+    acc.append(round(accuracy, 4))
+    num_labeled_samples.append(len(ALD.index['labeled']))
+    
+    logger.debug(f"Round: {rnd}, Testing accuracy {acc[rnd]}")
+
+    ##### LOGGING #####
+    logger.info(f'Round: {rnd}, Testing accuracy: {acc[rnd]}, Number of labeled samples: {len(ALD.index["labeled"])}/{init_pool}, Iteration time: {datetime.now() - init_tic}')
     ###################
 
     while len(ALD.index['labeled']) < BUDGET + NUM_INIT_LABELED:
@@ -211,51 +167,75 @@ for TRIAL in range(TRIALS):
         tic = datetime.now()
 
         rnd += 1
-        NUM_QUERY = min(NUM_QUERY, NUM_INIT_LABELED + BUDGET - len(ALD.index['labeled']), len(ALD.index['unlabeled']))
+        num_query = min(NUM_QUERY, NUM_INIT_LABELED + BUDGET - len(ALD.index['labeled']), len(ALD.index['unlabeled']))
+        
+        ### QUERY SAMPLES FOR LABELING ###
+        queried_idxs = strategy.query(num_query)
+        list_queried_idxs.append(np.asarray(queried_idxs))
 
-        queried_idxs = strategy.query(NUM_QUERY)
+        ### CLASS COUNTING ###
+        class_count, class_count_percent = ALD.count_class_query(queried_idxs)
 
-        ### TEST CLASS COUNTING ###
-        class_count = ALD.count_class_query(queried_idxs)
-        class_count_prct = [round(elem/sum(class_count),2) for elem in class_count]
-
+        ### MOVE SAMPLES FROM UNLABELED TO LABELED POOL ###
         ALD.move_from_unlabeled_to_labeled(queried_idxs, strategy)
 
-        strategy.train(X_valid, Y_valid)
-        P = strategy.predict(X_te, Y_te)
-        acc.append(round(1.0 * (Y_te==P).sum().item() / len(Y_te),4))
-        num_labeled_samples.append(round(len(ALD.index['labeled']),4))
+        ### TRAIN CLASSIFIER ON UPDATED LABELED POOL ###
+        strategy.train()
 
-        print(f"Round: {rnd}, Testing accuracy: {acc[rnd]}, Samples labeled: {num_labeled_samples[rnd]}, Pool size: {len(ALD.index['unlabeled'])}, Iteration time: {datetime.now()-tic}\n")
+        ### PREDICT ON UNLABELED POOL ###
+        P = strategy.predict(X_te, Y_te)
+
+        ### CONFUSION MATRIX ###
+        from plotcm import plot_confusion_matrix
+        from sklearn.metrics import confusion_matrix
+        if rnd % 2:
+            stacked = torch.stack((Y_te, P),dim=1)
+            cmt = torch.zeros(data_args['num_classes'], data_args['num_classes'], dtype=torch.int64)
+            for p in stacked:
+                tl, pl = p.tolist()
+                cmt[tl,pl] = cmt[tl,pl] + 1
+            print(cmt)
+            cm = confusion_matrix(Y_te, P) 
+            plt.figure(figsize=(25,25))
+            classes = data_args['class_names']
+            #classes = [str(i) for i in range(data_args['num_classes'])]
+            plot_confusion_matrix(cm, classes, rnd)
+        ########################
+
+        ### CALCULATE BALANCED ACCURACY / ACCURACY ###
+        if DATASET == 'PLANKTON10':
+            accuracy = metrics.balanced_accuracy_score(Y_te, P)
+        else:
+            accuracy = float(1.0 * (Y_te==P).sum().item() / len(Y_te))
+        ###############################################
+
+        acc.append(round(accuracy, 4))
+        num_labeled_samples.append(round(len(ALD.index['labeled']),4))
+        logger.debug(f'Round: {rnd}, Testing accuracy: {acc[rnd]}, Samples labeled: {num_labeled_samples[rnd]}, Pool size: {len(ALD.index["unlabeled"])}, Iteration time: {datetime.now()-tic}')
+
 
         ##### LOGGING #####
-        fh = open(LOG_FILE, 'a+')
-        fh.write(f'Round: {rnd}, Testing accuracy: {acc[rnd]}, Number of labeled samples: {num_labeled_samples[rnd]}/{n_pool}, Iteration time: {datetime.now() - tic}\n'
-                f'Queried class distribution: {class_count_prct}\n\n')
-        fh.close()
+        logger.info(f'Round: {rnd}, Testing accuracy: {acc[rnd]}, Number of labeled samples: {num_labeled_samples[rnd]}/{init_pool}, Iteration time: {datetime.now() - tic}\n'
+                f'Queried class distribution: {class_count_percent}')
         ###################
         
 
-    print(f"Acc: {acc}, Num labeled samples: {num_labeled_samples}, Strategy: {type(strategy).__name__}, Total run time: {datetime.now() - init_tic}")
+    logger.info(f"Acc: {acc}, Num labeled samples: {num_labeled_samples}, Strategy: {type(strategy).__name__}, Total run time: {datetime.now() - init_tic}")
 
     ##### LOGGING #####
-    fh = open(LOG_FILE, 'a+')
-    fh.write(f'\n \t\t **** FINISHED RUNNING trial {TRIAL+1}/{TRIALS+1} **** \n')
-    fh.write(f'Testing accuracy: {acc}, Number of labeled samples: {num_labeled_samples}, Strategy: {type(strategy).__name__}, Dataset: {DATA_SET}, Total iteration time: {datetime.now() - init_tic}\n')
-    fh.close()
+    logger.info(f'\t\t **** FINISHED RUNNING trial {TRIAL+1}/{TRIALS} ****')
+    logger.info(f'Testing accuracy: {acc}, Number of labeled samples: {num_labeled_samples}, Strategy: {type(strategy).__name__}, Dataset: {DATASET}, Total iteration time: {datetime.now() - init_tic}\n')
     ###################
-
+    np.save(f'./queried_idxs/{DATASET}_{STRATEGY}_q{NUM_QUERY}_{SEED}', list_queried_idxs)
     acc_all.append(acc)
 
 acc_all = np.asarray(acc_all)
-mean_acc = np.mean(acc_all, axis=0)
-std_acc = np.std(acc_all, axis=0)
-var_acc = np.var(acc_all, axis=0)
+mean_acc = list(np.mean(acc_all, axis=0))
+std_acc = list(np.std(acc_all, axis=0))
+var_acc = list(np.var(acc_all, axis=0))
 
 ##### LOGGING #####
-fh = open(LOG_FILE, 'a+')
-fh.write(f'\n \t\t **** FINISHED RUNNING **** \n')
-fh.write(f'Mean accuracy: {mean_acc}, Std accuracy: {std_acc}, Var accuracy: {var_acc} Strategy: {type(strategy).__name__}, Dataset: {DATA_SET}, Total iteration time: {datetime.now() - init_tic}\n'
+logger.info(f'\t\t **** FINISHED RUNNING ****')
+logger.info(f'Mean accuracy: {mean_acc}, Std accuracy: {std_acc}, Var accuracy: {var_acc} Strategy: {type(strategy).__name__}, Dataset: {DATASET}, Total iteration time: {datetime.now() - init_tic}\n'
         f'All results: {acc_all}')
-fh.close()
 ###################

@@ -1,0 +1,59 @@
+config = {"CIFAR10": {
+    "DATA_DIR": "../datasets/cifar10",
+    "PLOT_DIR": "./plots",
+    "NET": "net3",
+    "STRATEGY": "RANDOM",
+    "DATA_SET": "CIFAR10",
+    "NUM_INIT_LABELED": 100,
+    "NUM_QUERY": 1000,
+    "BUDGET": 3000,
+    "NUM_WORKERS": 4,
+    "FRACTION":1,
+    "CUDA_N": 1,
+    "LOGGING_LEVEL": "DEBUG"
+},
+"PLANKTON10": {
+    "DATA_DIR": "../datasets/train10",
+    "PLOT_DIR": "./plots",
+    "NET": "net3",
+    "STRATEGY": "RANDOM",
+    "DATA_SET": "PLANKTON10",
+    "NUM_INIT_LABELED": 100,
+    "NUM_QUERY": 1000,
+    "BUDGET": 3000,
+    "NUM_WORKERS": 4,
+    "FRACTION":1,
+    "CUDA_N": 1,
+    "LOGGING_LEVEL": "DEBUG"
+},
+"AILARON": {
+    "DATA_DIR": "../datasets/dataset_balanced_new",
+    "PLOT_DIR": "./plots",
+    "NET": "net3",
+    "STRATEGY": "RANDOM",
+    "DATA_SET": "AILARON",
+    "NUM_INIT_LABELED": 100,
+    "NUM_QUERY": 1000,
+    "BUDGET": 3000,
+    "NUM_WORKERS": 4,
+    "FRACTION":1,
+    "CUDA_N": 1,
+    "LOGGING_LEVEL": "DEBUG"
+},
+"MNIST": {
+    "DATA_DIR": "../datasets/cifar10",
+    "PLOT_DIR": "./plots",
+    "NET": "net3",
+    "STRATEGY": "RANDOM",
+    "DATA_SET": "MNIST",
+    "NUM_INIT_LABELED": 100,
+    "NUM_QUERY": 1000,
+    "BUDGET": 3000,
+    "NUM_WORKERS": 4,
+    "FRACTION":1,
+    "CUDA_N": 1,
+    "LOGGING_LEVEL": "DEBUG"
+}
+
+}
+

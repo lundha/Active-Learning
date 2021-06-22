@@ -8,7 +8,7 @@ from torch.distributions.multivariate_normal import MultivariateNormal as MVN
 from .utils_bayesian import *
 from .al_data_set import Dataset
 from sklearn.metrics import roc_auc_score
-from ..strategy import Strategy
+from ..Strategy import Strategy
 from PIL import Image
 
 class DataHandler(Dataset):

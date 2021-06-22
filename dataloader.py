@@ -38,7 +38,7 @@ class DataSet:
         self.classlist = None
         self.train = train
         self.file_ending = file_ending
-        
+
         self.load_data()
         self.images, self.labels = self.load_images_and_labels(img_dim)
         self.save_data(dir=data_dir)

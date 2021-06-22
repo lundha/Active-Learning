@@ -1,4 +1,3 @@
-
 from dataloader import DataSet, Resize, Normalize, ToTensor, Convert2RGB
 from torchvision import transforms, utils
 import torch
@@ -7,7 +6,6 @@ from skimage import io, transform
 import matplotlib.pyplot as plt
 from datetime import datetime
 import numpy as np
-from autoencoder import Autoencoder
 from PIL import Image, ImageOps
 
 def load_data_pool(train=False, arg=None) -> DataSet:
@@ -162,8 +160,6 @@ def save_to_file(filetype, filename, file):
     elif filetype == 'result':
         pass
 
-
-
 def load_data(dir, train):
     '''
     Loading numpy arrays and their corresponding labels
@@ -178,7 +174,6 @@ def load_data(dir, train):
         X_te = np.load(f'{dir}/test_data.npy')
         Y_te = np.load(f'{dir}/test_labels.npy')
         return X_te, Y_te
-
 
 
 if __name__ == "__main__":
