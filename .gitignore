@@ -3,7 +3,6 @@ CIFAR10
 
 .idea/
 experiments/*/
-*.png
 *.jpg
 *.pdf
 *.npy
